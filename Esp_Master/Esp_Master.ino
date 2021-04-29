@@ -12,11 +12,16 @@ Adafruit_LSM6DS33 imu;
 
 //  Create sensor object
 sensors_event_t a,g,temp;
-float incomingAccX, incomingAccY, incomingAccZ;
+float incomingAccX, incomingAccY, incomingAccZ,
+      accRoll,      accPitch,     accYaw;            // units degrees (roll and pitch noisy, yaw not possible)
+
 
 // LDR sensor pin
 const int ldrPin=34;
-
+// Flashed pins
+const int rightPin=13;
+const int leftPin=14;
+const int lightPin=12;
 int lightInit; // initial value
 //Receiver MAC Address
 //C4:4F:33:6B:0F:E1
@@ -98,21 +103,20 @@ void initLDRSensor(){
   // lightInit=analogRead(ldrPin);
 }
 
+
 void setup()
 {
   initIMU();
   initLDRSensor();
   initESPNOW();
+
+  // Init alarms
+  pinMode(leftPin,OUTPUT);
+  pinMode(rightPin, OUTPUT);
+  pinMode(lightPin,OUTPUT);
 }
 
 
-void getAccReadings(){
-  imu.getEvent(&a, &g, &temp);
-  // Get current acceleration values
-  imuReadings.accX = a.acceleration.x;
-  imuReadings.accY = a.acceleration.y;
-  imuReadings.accZ = a.acceleration.z;
-}
 
 
 void serialPrint(){
@@ -122,9 +126,14 @@ void serialPrint(){
   Serial.print(imuReadings.accY);
   Serial.print("  Z: ");
   Serial.print(imuReadings.accZ);
+  Serial.print("  Roll: ");
+  Serial.print(accRoll);
+  Serial.print("  Pitch: ");
+  Serial.print(accPitch);
   Serial.print("  Light: ");
   Serial.print(imuReadings.light);
   Serial.println();
+
 }
 
 // Callback Function that sents message
@@ -149,19 +158,65 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
   receivedString = receivedMessage.rec_message;
   
 }
+void getAccReadings(){
+  imu.getEvent(&a, &g, &temp);
+  // Get current acceleration values
+  imuReadings.accX = a.acceleration.x;
+  imuReadings.accY = a.acceleration.y;
+  imuReadings.accZ = a.acceleration.z;
+}
+
+
 void getLDRReadings(){
   // Read the current light Levels
   // lightInit=
   imuReadings.light=analogRead(ldrPin);
 }
 
+void doCalculations() {
+  accRoll = atan2(imuReadings.accY, imuReadings.accZ) * 180/M_PI;
+  accPitch = atan2(-imuReadings.accX, sqrt(imuReadings.accY*imuReadings.accY + imuReadings.accZ*imuReadings.accZ)) * 180/M_PI;
+}
+
+void blinking(int pin){
+  /*
+  Blinking the alarm 5 times (about 1 second procedure)
+  */
+  for(int k=0; k<=5; k++){
+    digitalWrite(pin,HIGH);
+    delay(200);
+    digitalWrite(pin,LOW);
+    delay(200);
+    
+  }
+}
+
+void checkAlarms(){
+
+  if (accRoll<-30){
+    //Enable Ligh LEFT
+    blinking(leftPin);
+  }
+  else if (accRoll>30){
+    // Enable light Right     
+    blinking(rightPin);
+  }
+  if (imuReadings.light< 600){
+    digitalWrite(lightPin,HIGH);
+  }else{
+    digitalWrite(lightPin,LOW);
+  
+  }
+}
 void loop()
 {
   //Get accelation readings
   getAccReadings();
   getLDRReadings();
-
+  doCalculations();
   serialPrint();
+  checkAlarms();
+  // CheckLeft();
   // checkTheLight();
   // if (imuReadings.accY>1){
   //   Serial.print("right");
