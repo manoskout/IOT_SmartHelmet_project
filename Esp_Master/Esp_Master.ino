@@ -153,7 +153,7 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
   //Serial.println(len);
 
   // Write the data that have been sent
-  receivedString = messageFromSlave.rec_message;
+  // receivedString = messageFromSlave.rec_message;
   
 }
 void getAccReadings(){
@@ -172,6 +172,9 @@ void getLDRReadings(){
 }
 
 void doCalculations() {
+  /*
+  Calculate Roll and pitch and save them into the structure message
+  */
   msgToSlave.roll = atan2(accY, accZ) * 180/M_PI;
   msgToSlave.pitch = atan2(-accX, sqrt(accY*accY + accZ*accZ)) * 180/M_PI;
 }
@@ -190,11 +193,11 @@ void blinking(int pin){
 }
 
 void checkAlarms(){
-  if (accRoll<-30){
+  if (msgToSlave.roll<-30){
     //Enable Ligh LEFT
     blinking(leftPin);
   }
-  else if (accRoll>30){
+  else if (msgToSlave.roll>30){
     // Enable light Right     
     blinking(rightPin);
   }
