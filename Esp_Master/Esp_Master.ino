@@ -12,7 +12,7 @@ Adafruit_LSM6DS33 imu;
 
 //  Create sensor object
 sensors_event_t a,g,temp;
-float incomingAccX, incomingAccY, incomingAccZ,
+float accX, accY, accZ,
       accRoll,      accPitch,     accYaw;            // units degrees (roll and pitch noisy, yaw not possible)
 
 
@@ -29,24 +29,26 @@ uint8_t broadcastAddress[] = {0xC4, 0x4F, 0x33, 0x6B, 0x0F, 0xE1};
 
 // Define the struct that contains the message content
 // for our purposes we import the accelerometer readings 
-typedef struct struct_message {
-  float accX;
-  float accY;
-  float accZ;
-  int light;
-} struct_message;
+typedef struct masterMessage {
+  float roll;
+  float pitch;
+  int lightSensor;
+} masterMessage;
 
-typedef struct struct_message_Rec{
-  String rec_message;
-}struct_message_Rec;
+typedef struct receivedMessage{
+  bool imuUsage;
+  //String rec_message;
+}receivedMessage;
 
-// Define the struct_message
-struct_message imuReadings;
+// Define the masterMessage
+masterMessage msgToSlave;
 // TO_DO -> Change the struct because we will get different content (ie, pin to trigger the flashes)
-struct_message_Rec receivedMessage;
-String receivedString; 
+receivedMessage messageFromSlave;
+
+// String receivedString; 
 // Variable to store if sending data was successful
 String success;
+// Should be global ... ( TODO -> Check why ???)
 esp_now_peer_info_t peerInfo;
 
 void initESPNOW(){
@@ -104,8 +106,7 @@ void initLDRSensor(){
 }
 
 
-void setup()
-{
+void setup(){
   initIMU();
   initLDRSensor();
   initESPNOW();
@@ -116,22 +117,19 @@ void setup()
   pinMode(lightPin,OUTPUT);
 }
 
-
-
-
 void serialPrint(){
   Serial.print("X: ");
-  Serial.print(imuReadings.accX);
+  Serial.print(accX);
   Serial.print("  Y: ");
-  Serial.print(imuReadings.accY);
+  Serial.print(accY);
   Serial.print("  Z: ");
-  Serial.print(imuReadings.accZ);
+  Serial.print(accZ);
   Serial.print("  Roll: ");
-  Serial.print(accRoll);
+  Serial.print(msgToSlave.roll);
   Serial.print("  Pitch: ");
-  Serial.print(accPitch);
+  Serial.print(msgToSlave.pitch);
   Serial.print("  Light: ");
-  Serial.print(imuReadings.light);
+  Serial.print(msgToSlave.lightSensor);
   Serial.println();
 
 }
@@ -149,33 +147,33 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status){
 }
 // Callback Function that triggered when a new packet arrives
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
-  memcpy(&receivedMessage,incomingData, sizeof(receivedMessage));
+  memcpy(&messageFromSlave,incomingData, sizeof(messageFromSlave));
   //Just for debug
   //Serial.print("Bytes received: ");
   //Serial.println(len);
 
   // Write the data that have been sent
-  receivedString = receivedMessage.rec_message;
+  receivedString = messageFromSlave.rec_message;
   
 }
 void getAccReadings(){
   imu.getEvent(&a, &g, &temp);
   // Get current acceleration values
-  imuReadings.accX = a.acceleration.x;
-  imuReadings.accY = a.acceleration.y;
-  imuReadings.accZ = a.acceleration.z;
+  accX = a.acceleration.x;
+  accY = a.acceleration.y;
+  accZ = a.acceleration.z;
 }
 
 
 void getLDRReadings(){
   // Read the current light Levels
   // lightInit=
-  imuReadings.light=analogRead(ldrPin);
+  msgToSlave.lightSensor=analogRead(ldrPin);
 }
 
 void doCalculations() {
-  accRoll = atan2(imuReadings.accY, imuReadings.accZ) * 180/M_PI;
-  accPitch = atan2(-imuReadings.accX, sqrt(imuReadings.accY*imuReadings.accY + imuReadings.accZ*imuReadings.accZ)) * 180/M_PI;
+  msgToSlave.roll = atan2(accY, accZ) * 180/M_PI;
+  msgToSlave.pitch = atan2(-accX, sqrt(accY*accY + accZ*accZ)) * 180/M_PI;
 }
 
 void blinking(int pin){
@@ -186,13 +184,12 @@ void blinking(int pin){
     digitalWrite(pin,HIGH);
     delay(200);
     digitalWrite(pin,LOW);
-    delay(200);
+    delay(300);
     
   }
 }
 
 void checkAlarms(){
-
   if (accRoll<-30){
     //Enable Ligh LEFT
     blinking(leftPin);
@@ -201,31 +198,23 @@ void checkAlarms(){
     // Enable light Right     
     blinking(rightPin);
   }
-  if (imuReadings.light< 600){
+  if (msgToSlave.lightSensor< 600){
     digitalWrite(lightPin,HIGH);
   }else{
     digitalWrite(lightPin,LOW);
   
   }
 }
-void loop()
-{
+
+void loop(){
   //Get accelation readings
   getAccReadings();
   getLDRReadings();
   doCalculations();
   serialPrint();
   checkAlarms();
-  // CheckLeft();
-  // checkTheLight();
-  // if (imuReadings.accY>1){
-  //   Serial.print("right");
-  // }
-  // if (imuReadings.accY<-1){
-  //   Serial.print("left");
-  // }
   // Send message via ESP-NOW
-  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &imuReadings, sizeof(imuReadings));
+  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &msgToSlave, sizeof(msgToSlave));
    
   if (result == ESP_OK) {
     // Serial.println("Sent with success");
@@ -233,5 +222,6 @@ void loop()
   else {
     // Serial.println("Error sending the data");
   }
+  // Delay should be reduced ? 
   delay(500);
 }
