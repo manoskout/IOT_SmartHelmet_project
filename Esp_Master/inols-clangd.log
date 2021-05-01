@@ -8215,3 +8215,23 @@ Content-Length: 275
 Content-Length: 38
 
 {"id":659,"jsonrpc":"2.0","result":[]}
+>>>
+Content-Length: 277
+
+{"method":"textDocument/codeAction","params":{"textDocument":{"uri":"file:///tmp/arduino-language-server115944645/sketch/Esp_Master.ino.cpp"},"range":{"start":{"line":297,"character":14},"end":{"line":297,"character":14}},"context":{"diagnostics":[]}},"id":660,"jsonrpc":"2.0"}
+<<<
+Content-Length: 38
+
+{"id":660,"jsonrpc":"2.0","result":[]}
+>>>
+Content-Length: 60
+
+{"method":"shutdown","params":null,"id":661,"jsonrpc":"2.0"}
+<<<
+Content-Length: 40
+
+{"id":661,"jsonrpc":"2.0","result":null}
+>>>
+Content-Length: 47
+
+{"method":"exit","params":null,"jsonrpc":"2.0"}<<< Read Error: EOF

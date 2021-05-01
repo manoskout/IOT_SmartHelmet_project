@@ -23102,3 +23102,28 @@ Started logging.
 2021/05/01 20:24:37 <-- codeAction(0 elements)
 2021/05/01 20:24:37 IDE --> textDocument/codeAction 618 [93m read-unlocked[0m
 2021/05/01 20:24:37 [91mIDE <-- LS     CL: ANSWER UNBOUND (618): [0m
+2021/05/01 20:37:05 [92mIDE --> LS     CL: REQUEST textDocument/codeAction 619: [0m
+2021/05/01 20:37:05 IDE --> textDocument/codeAction 619 [93m read-locked[0m
+2021/05/01 20:37:05 --> codeAction(file:///home/manos/Documents/IOT_SmartHelmet_project/Esp_Master/Esp_Master.ino:262:14)
+2021/05/01 20:37:05     --> codeAction(file:///tmp/arduino-language-server115944645/sketch/Esp_Master.ino.cpp:297:14)
+2021/05/01 20:37:05 IDE --> textDocument/codeAction 619 sent to Clang
+2021/05/01 20:37:05 [91mIDE     LS --> CL: REQUEST textDocument/codeAction 660: [0m
+2021/05/01 20:37:05 [92mIDE     LS <-- CL: ANSWER textDocument/codeAction 660 (660): [0m
+2021/05/01 20:37:05     <-- codeAction(0 elements)
+2021/05/01 20:37:05 <-- codeAction(0 elements)
+2021/05/01 20:37:05 IDE --> textDocument/codeAction 619 [93m read-unlocked[0m
+2021/05/01 20:37:05 [91mIDE <-- LS     CL: ANSWER UNBOUND (619): [0m
+2021/05/01 20:37:07 [92mIDE --> LS     CL: REQUEST shutdown 620: [0m
+2021/05/01 20:37:07 IDE --> shutdown 620 [93m read-locked[0m
+2021/05/01 20:37:07 IDE --> shutdown 620 sent to Clang
+2021/05/01 20:37:07 [91mIDE     LS --> CL: REQUEST shutdown 661: [0m
+2021/05/01 20:37:07 [92mIDE     LS <-- CL: ANSWER shutdown 661 (661): [0m
+2021/05/01 20:37:07 IDE --> shutdown 620 [93m read-unlocked[0m
+2021/05/01 20:37:07 [91mIDE <-- LS     CL: ANSWER UNBOUND (620): [0m
+2021/05/01 20:37:07 [92mIDE --> LS     CL: NOTIFICATION exit: [0m
+2021/05/01 20:37:07 IDE --> exit notif651 [93m read-locked[0m
+2021/05/01 20:37:07 IDE --> exit notif651 sent to Clang
+2021/05/01 20:37:07 [91mIDE     LS --> CL: NOTIFICATION exit: [0m
+2021/05/01 20:37:07 IDE --> exit notif651 [93m read-unlocked[0m
+2021/05/01 20:37:07 Lost connection with clangd!
+2021/05/01 20:37:07 removing buildpath

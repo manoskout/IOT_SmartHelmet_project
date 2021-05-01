@@ -7885,3 +7885,23 @@ Content-Length: 283
 Content-Length: 38
 
 {"id":618,"result":[],"jsonrpc":"2.0"}
+<<<
+Content-Length: 285
+
+{"jsonrpc":"2.0","id":619,"method":"textDocument/codeAction","params":{"textDocument":{"uri":"file:///home/manos/Documents/IOT_SmartHelmet_project/Esp_Master/Esp_Master.ino"},"range":{"start":{"line":262,"character":14},"end":{"line":262,"character":14}},"context":{"diagnostics":[]}}}
+>>>
+Content-Length: 38
+
+{"id":619,"result":[],"jsonrpc":"2.0"}
+<<<
+Content-Length: 60
+
+{"jsonrpc":"2.0","id":620,"method":"shutdown","params":null}
+>>>
+Content-Length: 40
+
+{"id":620,"result":null,"jsonrpc":"2.0"}
+<<<
+Content-Length: 47
+
+{"jsonrpc":"2.0","method":"exit","params":null}
