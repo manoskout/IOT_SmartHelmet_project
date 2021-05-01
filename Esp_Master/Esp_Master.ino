@@ -81,7 +81,6 @@ void initESPNOW(){
 
 
 void initIMU(){
-  Serial.begin(115200);
   while (!Serial)
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
@@ -105,18 +104,6 @@ void initLDRSensor(){
   // lightInit=analogRead(ldrPin);
 }
 
-
-void setup(){
-  initIMU();
-  initLDRSensor();
-  initESPNOW();
-
-  // Init alarms
-  pinMode(leftPin,OUTPUT);
-  pinMode(rightPin, OUTPUT);
-  pinMode(lightPin,OUTPUT);
-}
-
 void serialPrint(){
   Serial.print("X: ");
   Serial.print(accX);
@@ -131,6 +118,20 @@ void serialPrint(){
   Serial.print("  Light: ");
   Serial.print(msgToSlave.lightSensor);
   Serial.println();
+
+}
+
+void serialPlotter(){
+  // Serial.print(accX);
+  // Serial.print(accY);
+  // Serial.print(accZ);
+  Serial.print(msgToSlave.roll);
+  Serial.print("\t");
+  Serial.println(msgToSlave.pitch);
+  
+  // Serial.print("  Light: ");
+  // Serial.print(msgToSlave.lightSensor);
+  // Serial.println();
 
 }
 
@@ -185,14 +186,20 @@ void blinking(int pin){
   */
   for(int k=0; k<=5; k++){
     digitalWrite(pin,HIGH);
-    delay(200);
+    vTaskDelay(200/portTICK_PERIOD_MS);
     digitalWrite(pin,LOW);
-    delay(300);
+    vTaskDelay(300/portTICK_PERIOD_MS);
     
   }
 }
 
 void checkAlarms(){
+  if (msgToSlave.lightSensor< 800){
+    digitalWrite(lightPin,HIGH);
+  }else{
+    digitalWrite(lightPin,LOW);
+  
+  }
   if (msgToSlave.roll<-30){
     //Enable Ligh LEFT
     blinking(leftPin);
@@ -201,30 +208,79 @@ void checkAlarms(){
     // Enable light Right     
     blinking(rightPin);
   }
-  if (msgToSlave.lightSensor< 600){
-    digitalWrite(lightPin,HIGH);
-  }else{
-    digitalWrite(lightPin,LOW);
   
+}
+
+
+void task1(void * parameters){
+  for(;;){
+    Serial.print("Task 1: ");
+    //Get accelation readings
+    getAccReadings();
+    getLDRReadings();
+    doCalculations();
+    
+    // Send message via ESP-NOW
+    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &msgToSlave, sizeof(msgToSlave));
+    
+    if (result == ESP_OK) {
+      // Serial.println("Sent with success");
+    }
+    else {
+      // Serial.println("Error sending the data");
+    }
+    // Delay should be reduced ? 
+    // serialPrint();
+    serialPlotter();
+    checkAlarms();
+    // Serial.print(" Overflow Stack :");
+    // Serial.println(uxTaskGetStackHighWaterMark(NULL));
+    vTaskDelay(500/portTICK_PERIOD_MS);
   }
 }
 
-void loop(){
-  //Get accelation readings
-  getAccReadings();
-  getLDRReadings();
-  doCalculations();
-  serialPrint();
-  checkAlarms();
-  // Send message via ESP-NOW
-  esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &msgToSlave, sizeof(msgToSlave));
-   
-  if (result == ESP_OK) {
-    // Serial.println("Sent with success");
+void task2(void * parameters){
+  for(;;){
+    checkAlarms();
+    vTaskDelay(500/portTICK_PERIOD_MS);
+    // Serial.print(" Overflow Stack :");
+    // Serial.println(uxTaskGetStackHighWaterMark(NULL));
   }
-  else {
-    // Serial.println("Error sending the data");
-  }
-  // Delay should be reduced ? 
+  
+}
+
+void setup(){
+  Serial.begin(115200);
+  initIMU();
+  initLDRSensor();
+  initESPNOW();
+
+  // Init alarms
+  pinMode(leftPin,OUTPUT);
+  pinMode(rightPin, OUTPUT);
+  pinMode(lightPin,OUTPUT);
+
+  xTaskCreate(
+    task1, // function name
+    "Task1", // task name
+    1400, // stack size
+    NULL, // task parameters 
+    1, // task priority
+    NULL // task handle
+    );
   delay(500);
+  xTaskCreate(
+    task2, // function name
+    "Task2", // task name
+    1024, // stack size
+    NULL, // task parameters 
+    1, // task priority
+    NULL // task handle
+    );
+}
+
+
+
+void loop(){
+
 }

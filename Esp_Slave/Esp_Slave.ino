@@ -36,13 +36,13 @@ int receivedLight;
 
 // Callback Function that sents message
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status){
-  Serial.print("\r\nLast Packet Send Status:\t");
-  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
+  // Serial.print("\r\nLast Packet Send Status:\t");
+  // Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
   if (status == 0){
-    success = "Delivery Success :)";
+    // success = "Delivery Success :)";
   }
   else{
-    success = "Delivery Fail :(";
+    // success = "Delivery Fail :(";
   }
 }
 // Callback Function that triggered when a new packet arrives
@@ -72,7 +72,7 @@ void initESPNOW(){
   esp_now_register_send_cb(OnDataSent);
   
   // Register peer
-  esp_now_peer_info_t peerInfo;
+  esp_now_peer_info_t peerInfo; // TODO MOVE IT AS GLOBAL
   memcpy(peerInfo.peer_addr, broadcastAddress, 6);
   peerInfo.channel = 0;  
   peerInfo.encrypt = false;
@@ -86,15 +86,6 @@ void initESPNOW(){
   esp_now_register_recv_cb(OnDataRecv);
 }
 
-void setup()
-{
-  Serial.begin(115200);
-  initESPNOW();
-  // Init alarms
-  pinMode(leftPin,OUTPUT);
-  pinMode(rightPin, OUTPUT);
-  pinMode(lightPin,OUTPUT);
-}
 
 
 void blinking(int pin){
@@ -103,9 +94,12 @@ void blinking(int pin){
   */
   for(int k=0; k<=5; k++){
     digitalWrite(pin,HIGH);
-    delay(200);
+    vTaskDelay(200/portTICK_PERIOD_MS);
+    // delay(200);
     digitalWrite(pin,LOW);
-    delay(300);
+    // delay(300);
+    vTaskDelay(300/portTICK_PERIOD_MS);
+
     
   }
 }
@@ -119,7 +113,7 @@ void checkAlarms(){
     // Enable light Right     
     blinking(rightPin);
   }
-  if (masterMessage.lightSensor< 600){
+  if (masterMessage.lightSensor< 800){
     digitalWrite(lightPin,HIGH);
   }else{
     digitalWrite(lightPin,LOW);
@@ -127,18 +121,42 @@ void checkAlarms(){
   }
 }
 
+void alarmTask(void * parameters){
+  for(;;){
+    Serial.print("Roll: ");
+    Serial.print(masterMessage.roll);
+    Serial.print("    Pitch: ");
+    Serial.print(masterMessage.pitch);
+    Serial.print("    Light: ");
+    Serial.print(masterMessage.lightSensor);
+    Serial.println("");
+    checkAlarms();
+    vTaskDelay(500/portTICK_PERIOD_MS);
+  }
+  
+}
+
+void setup()
+{
+  Serial.begin(115200);
+  initESPNOW();
+  // Init alarms
+  pinMode(leftPin,OUTPUT);
+  pinMode(rightPin, OUTPUT);
+  pinMode(lightPin,OUTPUT);
+  xTaskCreate(
+    alarmTask, 
+    "AlarmTask", 
+    1024, 
+    NULL, 
+    1, 
+    NULL
+  );
+}
+
+
 
 void loop()
 {
-  /* You can implement your own display logic here*/  
-  // Display Readings in Serial Monitor
-  checkAlarms();
-  Serial.print("Roll: ");
-  Serial.print(masterMessage.roll);
-  Serial.print("    Pitch: ");
-  Serial.print(masterMessage.pitch);
-  Serial.print("    Light: ");
-  Serial.print(masterMessage.lightSensor);
-  
-  delay(500);
+
 }
