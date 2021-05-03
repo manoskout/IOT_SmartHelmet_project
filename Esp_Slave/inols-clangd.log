@@ -4630,4 +4630,296 @@ Content-Length: 274
 <<<
 Content-Length: 38
 
-{"id":389,"jsonrpc":"2.0","result":[]}
+{"id":389,"jsonrpc":"2.0","result":[]}<<< Read Error: read |0: file already closed
+--- Stream closed, err=%!s(<nil>)
+
+
+
+
+
+
+
+Started logging.
+
+>>>
+Content-Length: 2097
+
+{"method":"initialize","params":{"processId":25093,"rootPath":"/tmp/arduino-language-server562583353/sketch","rootUri":"file:///tmp/arduino-language-server562583353/sketch","clientInfo":{"name":"vscode","version":"1.50.0"},"trace":"off","initializationOptions":{},"capabilities":{"workspace":{"workspaceEdit":{"documentChanges":true,"resourceOperations":["create","rename","delete"]},"applyEdit":true,"symbol":{"symbolKind":{"valueSet":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26]}},"executeCommand":{"dynamicRegistration":true},"didChangeWatchedFiles":{"dynamicRegistration":true},"workspaceFolders":true,"configuration":true},"textDocument":{"declaration":{"linkSupport":true},"definition":{"linkSupport":true},"implementation":{"linkSupport":true,"dynamicRegistration":true},"typeDefinition":{"linkSupport":true},"synchronization":{"willSave":true,"didSave":true,"willSaveWaitUntil":true},"documentSymbol":{"symbolKind":{"valueSet":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26]},"hierarchicalDocumentSymbolSupport":true},"formatting":{"dynamicRegistration":true},"rangeFormatting":{"dynamicRegistration":true},"rename":{"dynamicRegistration":true,"prepareSupport":true},"codeAction":{"dynamicRegistration":true,"isPreferredSupport":true,"codeActionLiteralSupport":{"codeActionKind":{"valueSet":["","quickfix","refactor","refactor.extract","refactor.inline","refactor.rewrite","source","source.organizeImports"]}}},"completion":{"completionItem":{"documentationFormat":["markdown","plaintext"],"snippetSupport":true},"completionItemKind":{"valueSet":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25]},"contextSupport":true},"signatureHelp":{"signatureInformation":{"parameterInformation":{"labelOffsetSupport":true}}},"documentLink":{"dynamicRegistration":true,"tooltipSupport":true},"hover":{"contentFormat":["markdown","plaintext"]},"foldingRange":{"dynamicRegistration":true,"rangeLimit":5000,"lineFoldingOnly":true},"colorProvider":{"dynamicRegistration":true}},"window":{"workDoneProgress":true}}},"id":0,"jsonrpc":"2.0"}
+<<<
+Content-Length: 1671
+
+{"id":0,"jsonrpc":"2.0","result":{"capabilities":{"astProvider":true,"callHierarchyProvider":true,"codeActionProvider":{"codeActionKinds":["quickfix","refactor","info"]},"compilationDatabase":{"automaticReload":true},"completionProvider":{"allCommitCharacters":[" ","\t","(",")","[","]","{","}","<",">",":",";",",","+","-","/","*","%","^","&","#","?",".","=","\"","'","|"],"resolveProvider":false,"triggerCharacters":[".","<",">",":","\"","/"]},"declarationProvider":true,"definitionProvider":true,"documentFormattingProvider":true,"documentHighlightProvider":true,"documentLinkProvider":{"resolveProvider":false},"documentOnTypeFormattingProvider":{"firstTriggerCharacter":"\n","moreTriggerCharacter":[]},"documentRangeFormattingProvider":true,"documentSymbolProvider":true,"executeCommandProvider":{"commands":["clangd.applyFix","clangd.applyTweak"]},"hoverProvider":true,"implementationProvider":true,"memoryUsageProvider":true,"referencesProvider":true,"renameProvider":{"prepareProvider":true},"selectionRangeProvider":true,"semanticTokensProvider":{"full":{"delta":true},"legend":{"tokenModifiers":[],"tokenTypes":["variable","variable","parameter","function","method","function","property","variable","class","enum","enumMember","type","dependent","dependent","namespace","typeParameter","concept","type","macro","comment"]},"range":false},"signatureHelpProvider":{"triggerCharacters":["(",","]},"textDocumentSync":{"change":2,"openClose":true,"save":true},"typeHierarchyProvider":true,"workspaceSymbolProvider":true},"serverInfo":{"name":"clangd","version":"clangd version 12.0.0 (https://github.com/llvm/llvm-project e841bd5f335864b8c4d81cbf4df08460ef39f2ae)"}}}
+>>>
+Content-Length: 52
+
+{"method":"initialized","params":{},"jsonrpc":"2.0"}Content-Length: 5460
+
+{"method":"textDocument/didOpen","params":{"textDocument":{"uri":"file:///tmp/arduino-language-server562583353/sketch/Esp_Slave.ino.cpp","languageId":"cpp","version":1,"text":"#include \u003cArduino.h\u003e\n#line 1 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\n#include \u003cSPI.h\u003e\n#include \u003cAdafruit_GFX.h\u003e\n\n// For WIFI and TwoWayCom\n#include \u003cesp_now.h\u003e\n#include \u003cWiFi.h\u003e\n\nconst int rightPin=27;\nconst int leftPin=25;\nconst int lightPin=26;\n\n//Receiver MAC Address\n// MASTER : 10:52:1C:67:C5:2C\nuint8_t broadcastAddress[] = {0x10, 0x52, 0x1C, 0x67, 0xC5, 0x2C};\n\n// Define the struct that contains the message content\n// for our purposes we import the accelerometer readings \ntypedef struct messageFromMaster {\n  float roll;\n  float pitch;\n  int lightSensor;\n} messageFromMaster;\n\ntypedef struct struct_message {\n  bool imuUsage;\n} struct_message;\n// Define the struct_message\nstruct_message slaveMessage; // more accurate name of this structure (the message that sends to the Master)\n// TO_DO -\u003e Change the struct because we will get different content (ie, pin to trigger the flashes)\nmessageFromMaster masterMessage;\n// Variable to store if sending data was successful\nString success;\nfloat receivedRoll,receivedPitch;\nint receivedLight;\n\n\n// Callback Function that sents message\n#line 38 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\nvoid OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status);\n#line 49 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\nvoid OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len);\n#line 61 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\nvoid initESPNOW();\n#line 91 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\nvoid blinking(int pin);\n#line 107 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\nvoid checkAlarms();\n#line 124 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\nvoid alarmTask(void * parameters);\n#line 139 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\nvoid setup();\n#line 159 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\nvoid loop();\n#line 38 \"/home/manos/Documents/IOT_SmartHelmet_project/Esp_Slave/Esp_Slave.ino\"\nvoid OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status){\n  // Serial.print(\"\\r\\nLast Packet Send Status:\\t\");\n  // Serial.println(status == ESP_NOW_SEND_SUCCESS ? \"Delivery Success\" : \"Delivery Fail\");\n  if (status == 0){\n    // success = \"Delivery Success :)\";\n  }\n  else{\n    // success = \"Delivery Fail :(\";\n  }\n}\n// Callback Function that triggered when a new packet arrives\nvoid OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){\n  memcpy(\u0026masterMessage,incomingData, sizeof(masterMessage));\n  //Just for debug\n  // Serial.print(\"Bytes received: \");\n  // Serial.println(len);\n\n  // Write the data that have been sent\n  receivedRoll = masterMessage.roll;\n  receivedPitch = masterMessage.pitch;\n  receivedLight = masterMessage.lightSensor;\n}\n\nvoid initESPNOW(){\n  WiFi.mode(WIFI_MODE_STA);\n  Serial.println(WiFi.macAddress());\n  // Init ESP-NOW\n  if (esp_now_init() != ESP_OK) {\n    Serial.println(\"Error initializing ESP-NOW\");\n    return;\n  }\n\n  // Once ESPNow is successfully Init, we will register for Send CB to\n  // get the status of Trasnmitted packet\n  esp_now_register_send_cb(OnDataSent);\n  \n  // Register peer\n  esp_now_peer_info_t peerInfo; // TODO MOVE IT AS GLOBAL\n  memcpy(peerInfo.peer_addr, broadcastAddress, 6);\n  peerInfo.channel = 0;  \n  peerInfo.encrypt = false;\n  \n  // Add peer        \n  if (esp_now_add_peer(\u0026peerInfo) != ESP_OK){\n    Serial.println(\"Failed to add peer\");\n    return;\n  }\n  // Register for a callback function that will be called when data is received\n  esp_now_register_recv_cb(OnDataRecv);\n}\n\n\n\nvoid blinking(int pin){\n  /*\n  Blinking the alarm 5 times (about 1 second procedure)\n  */\n  for(int k=0; k\u003c=5; k++){\n    digitalWrite(pin,HIGH);\n    vTaskDelay(200/portTICK_PERIOD_MS);\n    // delay(200);\n    digitalWrite(pin,LOW);\n    // delay(300);\n    vTaskDelay(300/portTICK_PERIOD_MS);\n\n    \n  }\n}\n\nvoid checkAlarms(){\n  if (masterMessage.roll\u003c-30){\n    //Enable Ligh LEFT\n    blinking(leftPin);\n  }\n  else if (masterMessage.roll\u003e30){\n    // Enable light Right     \n    blinking(rightPin);\n  }\n  if (masterMessage.lightSensor\u003c 800){\n    digitalWrite(lightPin,HIGH);\n  }else{\n    digitalWrite(lightPin,LOW);\n  \n  }\n}\n\nvoid alarmTask(void * parameters){\n  for(;;){\n    Serial.print(\"Roll: \");\n    Serial.print(masterMessage.roll);\n    Serial.print(\"    Pitch: \");\n    Serial.print(masterMessage.pitch);\n    Serial.print(\"    Light: \");\n    Serial.print(masterMessage.lightSensor);\n    Serial.println(\"\");\n    checkAlarms();\n    vTaskDelay(500/portTICK_PERIOD_MS);\n  }\n  \n}\n\nvoid setup()\n{\n  Serial.begin(115200);\n  initESPNOW();\n  // Init alarms\n  pinMode(leftPin,OUTPUT);\n  pinMode(rightPin, OUTPUT);\n  pinMode(lightPin,OUTPUT);\n  xTaskCreate(\n    alarmTask, \n    \"AlarmTask\", \n    1024, \n    NULL, \n    1, \n    NULL\n  );\n}\n\n\n\nvoid loop()\n{\n\n}\n"}},"jsonrpc":"2.0"}Content-Length: 169
+
+{"method":"textDocument/documentSymbol","params":{"textDocument":{"uri":"file:///tmp/arduino-language-server562583353/sketch/Esp_Slave.ino.cpp"}},"id":1,"jsonrpc":"2.0"}Content-Length: 272
+
+{"method":"textDocument/codeAction","params":{"textDocument":{"uri":"file:///tmp/arduino-language-server562583353/sketch/Esp_Slave.ino.cpp"},"range":{"start":{"line":66,"character":19},"end":{"line":66,"character":19}},"context":{"diagnostics":[]}},"id":2,"jsonrpc":"2.0"}
+<<<
+Content-Length: 111
+
+{"id":0,"jsonrpc":"2.0","method":"window/workDoneProgress/create","params":{"token":"backgroundIndexProgress"}}
+>>>
+Content-Length: 38
+
+{"id":0,"result":null,"jsonrpc":"2.0"}
+<<<
+Content-Length: 143
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"begin","percentage":0,"title":"indexing"}}}Content-Length: 141
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"0/1","percentage":0}}}Content-Length: 142
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"0/58","percentage":0}}}Content-Length: 142
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"0/58","percentage":0}}}Content-Length: 142
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"0/58","percentage":0}}}Content-Length: 142
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"0/58","percentage":0}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"1/58","percentage":1.7241379310344827}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"1/58","percentage":1.7241379310344827}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"2/58","percentage":3.4482758620689653}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"2/58","percentage":3.4482758620689653}}}Content-Length: 1039
+
+{"jsonrpc":"2.0","method":"textDocument/publishDiagnostics","params":{"diagnostics":[{"code":"drv_unknown_argument","message":"Unknown argument: '-fstrict-volatile-bitfields'","range":{"end":{"character":0,"line":0},"start":{"character":0,"line":0}},"severity":1,"source":"clang"},{"code":"drv_unknown_argument_with_suggestion","message":"Unknown argument '-mlongcalls'; did you mean '-mlong-calls'?","range":{"end":{"character":0,"line":0},"start":{"character":0,"line":0}},"severity":1,"source":"clang"},{"code":"unknown_typename","message":"In included file: unknown type name 'pthread_t'\n\n/home/manos/.arduino15/packages/esp32/tools/xtensa-esp32-elf-gcc/1.22.0-97-gc752ad5-5.2.0/bin/../lib/gcc/xtensa-esp32-elf/5.2.0/../../../../xtensa-esp32-elf/include/c++/5.2.0/xtensa-esp32-elf/bits/gthr-default.h:47:9:\nnote: error occurred here","range":{"end":{"character":10,"line":0},"start":{"character":9,"line":0}},"severity":1,"source":"clang"}],"uri":"file:///tmp/arduino-language-server562583353/sketch/Esp_Slave.ino.cpp","version":1}}Content-Length: 6691
+
+{"id":1,"jsonrpc":"2.0","result":[{"kind":13,"name":"rightPin","range":{"end":{"character":21,"line":9},"start":{"character":0,"line":9}},"selectionRange":{"end":{"character":18,"line":9},"start":{"character":10,"line":9}}},{"kind":13,"name":"leftPin","range":{"end":{"character":20,"line":10},"start":{"character":0,"line":10}},"selectionRange":{"end":{"character":17,"line":10},"start":{"character":10,"line":10}}},{"kind":13,"name":"lightPin","range":{"end":{"character":21,"line":11},"start":{"character":0,"line":11}},"selectionRange":{"end":{"character":18,"line":11},"start":{"character":10,"line":11}}},{"kind":13,"name":"broadcastAddress","range":{"end":{"character":65,"line":15},"start":{"character":0,"line":15}},"selectionRange":{"end":{"character":24,"line":15},"start":{"character":8,"line":15}}},{"children":[{"kind":8,"name":"roll","range":{"end":{"character":12,"line":20},"start":{"character":2,"line":20}},"selectionRange":{"end":{"character":12,"line":20},"start":{"character":8,"line":20}}},{"kind":8,"name":"pitch","range":{"end":{"character":13,"line":21},"start":{"character":2,"line":21}},"selectionRange":{"end":{"character":13,"line":21},"start":{"character":8,"line":21}}},{"kind":8,"name":"lightSensor","range":{"end":{"character":17,"line":22},"start":{"character":2,"line":22}},"selectionRange":{"end":{"character":17,"line":22},"start":{"character":6,"line":22}}}],"kind":23,"name":"messageFromMaster","range":{"end":{"character":1,"line":23},"start":{"character":8,"line":19}},"selectionRange":{"end":{"character":32,"line":19},"start":{"character":15,"line":19}}},{"kind":5,"name":"messageFromMaster","range":{"end":{"character":19,"line":23},"start":{"character":0,"line":19}},"selectionRange":{"end":{"character":19,"line":23},"start":{"character":2,"line":23}}},{"children":[{"kind":8,"name":"imuUsage","range":{"end":{"character":15,"line":26},"start":{"character":2,"line":26}},"selectionRange":{"end":{"character":15,"line":26},"start":{"character":7,"line":26}}}],"kind":23,"name":"struct_message","range":{"end":{"character":1,"line":27},"start":{"character":8,"line":25}},"selectionRange":{"end":{"character":29,"line":25},"start":{"character":15,"line":25}}},{"kind":5,"name":"struct_message","range":{"end":{"character":16,"line":27},"start":{"character":0,"line":25}},"selectionRange":{"end":{"character":16,"line":27},"start":{"character":2,"line":27}}},{"kind":13,"name":"slaveMessage","range":{"end":{"character":27,"line":29},"start":{"character":0,"line":29}},"selectionRange":{"end":{"character":27,"line":29},"start":{"character":15,"line":29}}},{"kind":13,"name":"masterMessage","range":{"end":{"character":31,"line":31},"start":{"character":0,"line":31}},"selectionRange":{"end":{"character":31,"line":31},"start":{"character":18,"line":31}}},{"kind":13,"name":"success","range":{"end":{"character":14,"line":33},"start":{"character":0,"line":33}},"selectionRange":{"end":{"character":14,"line":33},"start":{"character":7,"line":33}}},{"kind":13,"name":"receivedRoll","range":{"end":{"character":18,"line":34},"start":{"character":0,"line":34}},"selectionRange":{"end":{"character":18,"line":34},"start":{"character":6,"line":34}}},{"kind":13,"name":"receivedPitch","range":{"end":{"character":32,"line":34},"start":{"character":0,"line":34}},"selectionRange":{"end":{"character":32,"line":34},"start":{"character":19,"line":34}}},{"kind":13,"name":"receivedLight","range":{"end":{"character":17,"line":35},"start":{"character":0,"line":35}},"selectionRange":{"end":{"character":17,"line":35},"start":{"character":4,"line":35}}},{"kind":12,"name":"OnDataSent","range":{"end":{"character":70,"line":40},"start":{"character":0,"line":40}},"selectionRange":{"end":{"character":15,"line":40},"start":{"character":5,"line":40}}},{"kind":12,"name":"OnDataRecv","range":{"end":{"character":74,"line":42},"start":{"character":0,"line":42}},"selectionRange":{"end":{"character":15,"line":42},"start":{"character":5,"line":42}}},{"kind":12,"name":"initESPNOW","range":{"end":{"character":17,"line":44},"start":{"character":0,"line":44}},"selectionRange":{"end":{"character":15,"line":44},"start":{"character":5,"line":44}}},{"kind":12,"name":"blinking","range":{"end":{"character":22,"line":46},"start":{"character":0,"line":46}},"selectionRange":{"end":{"character":13,"line":46},"start":{"character":5,"line":46}}},{"kind":12,"name":"checkAlarms","range":{"end":{"character":18,"line":48},"start":{"character":0,"line":48}},"selectionRange":{"end":{"character":16,"line":48},"start":{"character":5,"line":48}}},{"kind":12,"name":"alarmTask","range":{"end":{"character":33,"line":50},"start":{"character":0,"line":50}},"selectionRange":{"end":{"character":14,"line":50},"start":{"character":5,"line":50}}},{"kind":12,"name":"setup","range":{"end":{"character":12,"line":52},"start":{"character":0,"line":52}},"selectionRange":{"end":{"character":10,"line":52},"start":{"character":5,"line":52}}},{"kind":12,"name":"loop","range":{"end":{"character":11,"line":54},"start":{"character":0,"line":54}},"selectionRange":{"end":{"character":9,"line":54},"start":{"character":5,"line":54}}},{"kind":12,"name":"OnDataSent","range":{"end":{"character":1,"line":65},"start":{"character":0,"line":56}},"selectionRange":{"end":{"character":15,"line":56},"start":{"character":5,"line":56}}},{"kind":12,"name":"OnDataRecv","range":{"end":{"character":1,"line":77},"start":{"character":0,"line":67}},"selectionRange":{"end":{"character":15,"line":67},"start":{"character":5,"line":67}}},{"kind":12,"name":"initESPNOW","range":{"end":{"character":1,"line":105},"start":{"character":0,"line":79}},"selectionRange":{"end":{"character":15,"line":79},"start":{"character":5,"line":79}}},{"kind":12,"name":"blinking","range":{"end":{"character":1,"line":123},"start":{"character":0,"line":109}},"selectionRange":{"end":{"character":13,"line":109},"start":{"character":5,"line":109}}},{"kind":12,"name":"checkAlarms","range":{"end":{"character":1,"line":140},"start":{"character":0,"line":125}},"selectionRange":{"end":{"character":16,"line":125},"start":{"character":5,"line":125}}},{"kind":12,"name":"alarmTask","range":{"end":{"character":1,"line":155},"start":{"character":0,"line":142}},"selectionRange":{"end":{"character":14,"line":142},"start":{"character":5,"line":142}}},{"kind":12,"name":"setup","range":{"end":{"character":1,"line":173},"start":{"character":0,"line":157}},"selectionRange":{"end":{"character":10,"line":157},"start":{"character":5,"line":157}}},{"kind":12,"name":"loop","range":{"end":{"character":1,"line":180},"start":{"character":0,"line":177}},"selectionRange":{"end":{"character":9,"line":177},"start":{"character":5,"line":177}}}]}Content-Length: 36
+
+{"id":2,"jsonrpc":"2.0","result":[]}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"3/58","percentage":5.1724137931034484}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"3/58","percentage":5.1724137931034484}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"4/58","percentage":6.8965517241379306}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"4/58","percentage":6.8965517241379306}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"5/58","percentage":8.6206896551724146}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"5/58","percentage":8.6206896551724146}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"6/58","percentage":10.344827586206897}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"6/58","percentage":10.344827586206897}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"7/58","percentage":12.068965517241379}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"7/58","percentage":12.068965517241379}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"8/58","percentage":13.793103448275861}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"8/58","percentage":13.793103448275861}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"9/58","percentage":15.517241379310345}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"9/58","percentage":15.517241379310345}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"10/58","percentage":17.241379310344829}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"10/58","percentage":17.241379310344829}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"11/58","percentage":18.96551724137931}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"11/58","percentage":18.96551724137931}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"12/58","percentage":20.689655172413794}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"12/58","percentage":20.689655172413794}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"13/58","percentage":22.413793103448278}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"13/58","percentage":22.413793103448278}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"14/58","percentage":24.137931034482758}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"14/58","percentage":24.137931034482758}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"15/58","percentage":25.862068965517242}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"15/58","percentage":25.862068965517242}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"16/58","percentage":27.586206896551722}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"16/58","percentage":27.586206896551722}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"17/58","percentage":29.310344827586206}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"17/58","percentage":29.310344827586206}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"18/58","percentage":31.03448275862069}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"18/58","percentage":31.03448275862069}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"19/58","percentage":32.758620689655174}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"19/58","percentage":32.758620689655174}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"20/58","percentage":34.482758620689658}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"20/58","percentage":34.482758620689658}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"21/58","percentage":36.206896551724135}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"21/58","percentage":36.206896551724135}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"22/58","percentage":37.931034482758619}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"22/58","percentage":37.931034482758619}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"23/58","percentage":39.655172413793103}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"23/58","percentage":39.655172413793103}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"24/58","percentage":41.379310344827587}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"24/58","percentage":41.379310344827587}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"25/58","percentage":43.103448275862071}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"25/58","percentage":43.103448275862071}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"26/58","percentage":44.827586206896555}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"26/58","percentage":44.827586206896555}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"27/58","percentage":46.551724137931032}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"27/58","percentage":46.551724137931032}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"28/58","percentage":48.275862068965516}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"28/58","percentage":48.275862068965516}}}Content-Length: 144
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"29/58","percentage":50}}}Content-Length: 144
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"29/58","percentage":50}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"30/58","percentage":51.724137931034484}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"30/58","percentage":51.724137931034484}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"31/58","percentage":53.448275862068968}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"31/58","percentage":53.448275862068968}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"32/58","percentage":55.172413793103445}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"32/58","percentage":55.172413793103445}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"33/58","percentage":56.896551724137929}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"33/58","percentage":56.896551724137929}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"34/58","percentage":58.620689655172413}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"34/58","percentage":58.620689655172413}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"35/58","percentage":60.344827586206897}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"35/58","percentage":60.344827586206897}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"36/58","percentage":62.068965517241381}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"36/58","percentage":62.068965517241381}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"37/58","percentage":63.793103448275865}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"37/58","percentage":63.793103448275865}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"38/58","percentage":65.517241379310349}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"38/58","percentage":65.517241379310349}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"39/58","percentage":67.241379310344826}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"39/58","percentage":67.241379310344826}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"40/58","percentage":68.965517241379317}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"40/58","percentage":68.965517241379317}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"41/58","percentage":70.689655172413794}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"41/58","percentage":70.689655172413794}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"42/58","percentage":72.41379310344827}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"42/58","percentage":72.41379310344827}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"43/58","percentage":74.137931034482762}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"43/58","percentage":74.137931034482762}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"44/58","percentage":75.862068965517238}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"44/58","percentage":75.862068965517238}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"45/58","percentage":77.58620689655173}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"45/58","percentage":77.58620689655173}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"46/58","percentage":79.310344827586206}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"46/58","percentage":79.310344827586206}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"47/58","percentage":81.034482758620683}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"47/58","percentage":81.034482758620683}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"48/58","percentage":82.758620689655174}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"48/58","percentage":82.758620689655174}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"49/58","percentage":84.482758620689651}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"49/58","percentage":84.482758620689651}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"50/58","percentage":86.206896551724142}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"50/58","percentage":86.206896551724142}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"51/58","percentage":87.931034482758619}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"51/58","percentage":87.931034482758619}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"52/58","percentage":89.65517241379311}}}Content-Length: 159
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"52/58","percentage":89.65517241379311}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"53/58","percentage":91.379310344827587}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"53/58","percentage":91.379310344827587}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"54/58","percentage":93.103448275862064}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"54/58","percentage":93.103448275862064}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"55/58","percentage":94.827586206896555}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"56/58","percentage":96.551724137931032}}}Content-Length: 160
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"report","message":"57/58","percentage":98.275862068965523}}}Content-Length: 107
+
+{"jsonrpc":"2.0","method":"$/progress","params":{"token":"backgroundIndexProgress","value":{"kind":"end"}}}
+>>>
+Content-Length: 58
+
+{"method":"shutdown","params":null,"id":3,"jsonrpc":"2.0"}
+<<<
+Content-Length: 38
+
+{"id":3,"jsonrpc":"2.0","result":null}
+>>>
+Content-Length: 47
+
+{"method":"exit","params":null,"jsonrpc":"2.0"}
