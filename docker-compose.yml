@@ -1,0 +1,39 @@
+version: "3"
+
+services:
+  nodered:
+    image: nodered/node-red:latest
+    environment:
+      - TZ= Europe/Athens
+    ports:
+      - "1880:1880"
+      - "1883:1883"
+    volumes:
+      - node-red-data:/data
+        
+    restart: on-failure
+
+  influxdb:
+    image: influxdb:1.8.5
+    ports:
+      - "8086:8086"
+    volumes:
+      - influxdb:/var/lib/influxdb 
+    restart: on-failure
+
+  grafana:
+    image: "grafana/grafana:latest"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./custom_grafana.ini:/etc/grafana/grafana.ini
+      - grafana:/var/lib/grafana
+    environment:
+      - GF_INSTALL_PLUGINS=grafana-clock-panel,natel-discrete-panel,briangann-gauge-panel,vonage-status-panel,neocat-cal-heatmap-panel
+    restart: on-failure
+
+volumes:
+  node-red-data:
+  influxdb:
+  grafana:
+

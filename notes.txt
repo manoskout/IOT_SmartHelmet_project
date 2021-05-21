@@ -1,0 +1,8 @@
+Some general purpose notes for the project. It will be beneficial for the report!
+
+
+Create user in influx db
+
+Then parse the string object that the esp32 has sent on the node red flow
+As an out put we get an object which initially through the influx db node saved into the database
+Then we start visualization using the real time metrics in grafana dashboard

@@ -5,18 +5,21 @@
 
 //For WiFi and TwoWayCom
 #include <esp_now.h>
-#include <WiFi.h>
 
+//For MQTT
+#include <PubSubClient.h>
+#include <WiFi.h>
 //  Create sensor object
 Adafruit_LSM6DS33 imu;
 
 //  Create sensor object
 sensors_event_t a,g,temp;
-float accX, accY, accZ,
+float accX, accY, accZ, gyroX, gyroY, gyroZ,
       accRoll,      accPitch,     accYaw;            // units degrees (roll and pitch noisy, yaw not possible)
 
 
 // LDR sensor pin
+unsigned long last = 0;
 const int ldrPin=34;
 // Flashed pins
 const int rightPin=13;
@@ -50,6 +53,79 @@ receivedMessage messageFromSlave;
 String success;
 // Should be global ... ( TODO -> Check why ???)
 esp_now_peer_info_t peerInfo;
+
+// WiFi credentials
+const char* ssid = "Koutoulakis";
+const char* password = "2810751032";
+
+// MQTT IP server (Might need change)
+const char* mqtt_server = "192.168.1.20";
+int mqtt_port=1883;
+// message to communicate with mqtt server
+String message;
+bool state=false;
+
+WiFiClient espClient;
+PubSubClient client(espClient);
+
+// WiFi Connection Function
+void connectToWifi(){
+  WiFi.begin(ssid,password);
+  Serial.print("Connecting....");
+  while (WiFi.status() != WL_CONNECTED){
+    Serial.print(".");
+    delay(500);
+  }
+  Serial.print("\nWiFi connected - IP address: ");
+  Serial.println(WiFi.localIP());
+  delay(500);
+  
+  client.setServer(mqtt_server, 1883);
+  client.setCallback(callback);
+}
+
+void callback(char* topic, byte* payload, unsigned int length){
+  for (int i = 0; i < length; i++){
+    message += (char)payload[i];
+  }
+  Serial.print("Message arrived [");
+  Serial.print(String(topic));
+  Serial.print("/");
+  Serial.print(String(message));
+  Serial.println("] ");
+  
+  // if (String(topic) == "esp32/out"){
+  //   if (message == "on") {
+  //     digitalWrite(ledPin, HIGH);
+  //   }
+  //   else if (message == "off"){
+  //     digitalWrite(ledPin, LOW);
+  //   }
+  // }
+  // if (String(topic) == "esp32/ldr"){
+  //   ledcWrite(0, message.toInt());
+  // }
+  message = "";
+}
+
+void reconnect(){
+  // Loop until we're reconnected
+  while (!client.connected()){
+    Serial.println("Attempting MQTT connection...");
+    if (client.connect("ESP32 client")){
+      // TODO-> the subscribes need to be changed !!!
+      Serial.println("Connected");
+      client.subscribe("esp32/HELMET_INFO");
+;
+    }
+    else{
+      Serial.print(client.state());
+      Serial.println("Failed - Try again in 5 seconds");
+      delay(5000);
+    }
+  }
+}
+
 
 void initESPNOW(){
   WiFi.mode(WIFI_MODE_STA);
@@ -115,7 +191,7 @@ void serialPrint(){
   Serial.print(msgToSlave.roll);
   Serial.print("  Pitch: ");
   Serial.print(msgToSlave.pitch);
-  Serial.print("  Light: ");
+  Serial.print("  Luminosity: ");
   Serial.print(msgToSlave.lightSensor);
   Serial.println();
 
@@ -163,6 +239,10 @@ void getAccReadings(){
   accX = a.acceleration.x;
   accY = a.acceleration.y;
   accZ = a.acceleration.z;
+  // Get current gyroscope values
+  // gyroX= g.gyro.x;
+  // gyroY= g.gyro.y;
+  // gyroZ= g.gyro.z;
 }
 
 
@@ -219,7 +299,32 @@ void task1(void * parameters){
     getAccReadings();
     getLDRReadings();
     doCalculations();
-    
+    if (!client.connected()) {
+      Serial.println("--------------------------------------------NONONONNO-------------------------");
+      reconnect();
+    }
+    if (millis() > last + 5000/portTICK_PERIOD_MS ){
+      String message = "";
+      last = millis();
+      // client.publish("esp32/accx", String(accX).c_str());
+      // client.publish("esp32/accy", String(accY).c_str());
+      // client.publish("esp32/accz", String(accZ).c_str());
+      // client.publish("esp32/gyrox", String(gyroX).c_str());
+      // client.publish("esp32/gyroy", String(gyroY).c_str());
+      // client.publish("esp32/gyroz", String(gyroZ).c_str());
+      message = "ldr="+String(analogRead(ldrPin))+";";
+      message += "roll="+String(msgToSlave.roll)+";";
+      message += "pitch="+String(msgToSlave.pitch)+";";
+      message += "accX="+String(accX)+";";
+      message += "accY="+String(accY)+";";
+      message += "accZ="+String(accZ)+";";
+
+
+      // Serial.println("Message to NODERED: ");
+      // Serial.println(message);
+      client.publish("esp32/HELMET_INFO", message.c_str());
+
+    }
     // Send message via ESP-NOW
     esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &msgToSlave, sizeof(msgToSlave));
     
@@ -230,27 +335,27 @@ void task1(void * parameters){
       // Serial.println("Error sending the data");
     }
     // Delay should be reduced ? 
-    // serialPrint();
-    serialPlotter();
-    checkAlarms();
-    // Serial.print(" Overflow Stack :");
-    // Serial.println(uxTaskGetStackHighWaterMark(NULL));
+    serialPrint();
+    // serialPlotter();
+
     vTaskDelay(500/portTICK_PERIOD_MS);
   }
 }
 
 void task2(void * parameters){
+
   for(;;){
+    
     checkAlarms();
     vTaskDelay(500/portTICK_PERIOD_MS);
-    // Serial.print(" Overflow Stack :");
-    // Serial.println(uxTaskGetStackHighWaterMark(NULL));
+    
   }
   
 }
 
 void setup(){
   Serial.begin(115200);
+  connectToWifi();
   initIMU();
   initLDRSensor();
   initESPNOW();
@@ -263,7 +368,7 @@ void setup(){
   xTaskCreate(
     task1, // function name
     "Task1", // task name
-    1400, // stack size
+    2048, // stack size
     NULL, // task parameters 
     1, // task priority
     NULL // task handle
@@ -272,7 +377,7 @@ void setup(){
   xTaskCreate(
     task2, // function name
     "Task2", // task name
-    1024, // stack size
+    1400, // stack size
     NULL, // task parameters 
     1, // task priority
     NULL // task handle
