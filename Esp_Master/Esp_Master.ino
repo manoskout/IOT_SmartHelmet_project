@@ -1,17 +1,14 @@
-//#include <Arduino.h>
 // For IMU
 #include <Adafruit_LSM6DS33.h>
 #include <Adafruit_Sensor.h>
-
 //For WiFi and TwoWayCom
 #include <esp_now.h>
-
 //For MQTT
 #include <PubSubClient.h>
 #include <WiFi.h>
+
 //  Create sensor object
 Adafruit_LSM6DS33 imu;
-
 //  Create sensor object
 sensors_event_t a,g,temp;
 float accX, accY, accZ, gyroX, gyroY, gyroZ,
@@ -58,7 +55,7 @@ esp_now_peer_info_t peerInfo;
 const char* ssid = "Koutoulakis";
 const char* password = "2810751032";
 
-// MQTT IP server (Might need change)
+// MQTT IP server
 const char* mqtt_server = "192.168.1.20";
 int mqtt_port=1883;
 // message to communicate with mqtt server
@@ -68,7 +65,7 @@ bool state=false;
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-// WiFi Connection Function
+// -------------------------- WIFI INIT FUNCTION --------------------------
 void connectToWifi(){
   WiFi.begin(ssid,password);
   Serial.print("Connecting....");
@@ -83,7 +80,9 @@ void connectToWifi(){
   client.setServer(mqtt_server, 1883);
   client.setCallback(callback);
 }
+// -------------------------- ENDOF WIFI INIT FUNCTION --------------------------
 
+// -------------------------- MQTT INIT FUNCTIONS --------------------------
 void callback(char* topic, byte* payload, unsigned int length){
   for (int i = 0; i < length; i++){
     message += (char)payload[i];
@@ -107,16 +106,14 @@ void callback(char* topic, byte* payload, unsigned int length){
   // }
   message = "";
 }
-
 void reconnect(){
   // Loop until we're reconnected
   while (!client.connected()){
     Serial.println("Attempting MQTT connection...");
-    if (client.connect("ESP32 client")){
+    if (client.connect("SmartHelmet")){
       // TODO-> the subscribes need to be changed !!!
       Serial.println("Connected");
       client.subscribe("esp32/HELMET_INFO");
-;
     }
     else{
       Serial.print(client.state());
@@ -125,8 +122,148 @@ void reconnect(){
     }
   }
 }
+// -------------------------- ENDOF MQTT INIT FUNCTIONS --------------------------
 
+// -------------------------- SENSORS INIT FUNCTIONS --------------------------
+void initIMU(){
+  while (!Serial)
+    delay(10); // will pause Zero, Leonardo, etc until serial console opens
 
+  Serial.println("Adafruit LSM6DS33 test!");
+
+  if (!imu.begin_I2C()) {
+    // if (!lsm6ds33.begin_SPI(LSM_CS)) {
+    // if (!lsm6ds33.begin_SPI(LSM_CS, LSM_SCK, LSM_MISO, LSM_MOSI)) {
+    Serial.println("Failed to find LSM6DS33 chip");
+    while (1) {
+      delay(10);
+    }
+  }  
+  Serial.println("Adafruit LSM6DS33 FOUND!");
+    // lsm6ds33.setAccelRange(LSM6DS_ACCEL_RANGE_2_G);
+  Serial.print("Accelerometer range set to: ");
+  switch (imu.getAccelRange()) {
+  case LSM6DS_ACCEL_RANGE_2_G:
+    Serial.println("+-2G");
+    break;
+  case LSM6DS_ACCEL_RANGE_4_G:
+    Serial.println("+-4G");
+    break;
+  case LSM6DS_ACCEL_RANGE_8_G:
+    Serial.println("+-8G");
+    break;
+  case LSM6DS_ACCEL_RANGE_16_G:
+    Serial.println("+-16G");
+    break;
+  }
+
+  // lsm6ds33.setGyroRange(LSM6DS_GYRO_RANGE_250_DPS);
+  Serial.print("Gyro range set to: ");
+  switch (imu.getGyroRange()) {
+  case LSM6DS_GYRO_RANGE_125_DPS:
+    Serial.println("125 degrees/s");
+    break;
+  case LSM6DS_GYRO_RANGE_250_DPS:
+    Serial.println("250 degrees/s");
+    break;
+  case LSM6DS_GYRO_RANGE_500_DPS:
+    Serial.println("500 degrees/s");
+    break;
+  case LSM6DS_GYRO_RANGE_1000_DPS:
+    Serial.println("1000 degrees/s");
+    break;
+  case LSM6DS_GYRO_RANGE_2000_DPS:
+    Serial.println("2000 degrees/s");
+    break;
+  case ISM330DHCX_GYRO_RANGE_4000_DPS:
+    break; // unsupported range for the DS33
+  }
+
+  // lsm6ds33.setAccelDataRate(LSM6DS_RATE_12_5_HZ);
+  Serial.print("Accelerometer data rate set to: ");
+  switch (imu.getAccelDataRate()) {
+  case LSM6DS_RATE_SHUTDOWN:
+    Serial.println("0 Hz");
+    break;
+  case LSM6DS_RATE_12_5_HZ:
+    Serial.println("12.5 Hz");
+    break;
+  case LSM6DS_RATE_26_HZ:
+    Serial.println("26 Hz");
+    break;
+  case LSM6DS_RATE_52_HZ:
+    Serial.println("52 Hz");
+    break;
+  case LSM6DS_RATE_104_HZ:
+    Serial.println("104 Hz");
+    break;
+  case LSM6DS_RATE_208_HZ:
+    Serial.println("208 Hz");
+    break;
+  case LSM6DS_RATE_416_HZ:
+    Serial.println("416 Hz");
+    break;
+  case LSM6DS_RATE_833_HZ:
+    Serial.println("833 Hz");
+    break;
+  case LSM6DS_RATE_1_66K_HZ:
+    Serial.println("1.66 KHz");
+    break;
+  case LSM6DS_RATE_3_33K_HZ:
+    Serial.println("3.33 KHz");
+    break;
+  case LSM6DS_RATE_6_66K_HZ:
+    Serial.println("6.66 KHz");
+    break;
+  }
+
+  // lsm6ds33.setGyroDataRate(LSM6DS_RATE_12_5_HZ);
+  Serial.print("Gyro data rate set to: ");
+  switch (imu.getGyroDataRate()) {
+  case LSM6DS_RATE_SHUTDOWN:
+    Serial.println("0 Hz");
+    break;
+  case LSM6DS_RATE_12_5_HZ:
+    Serial.println("12.5 Hz");
+    break;
+  case LSM6DS_RATE_26_HZ:
+    Serial.println("26 Hz");
+    break;
+  case LSM6DS_RATE_52_HZ:
+    Serial.println("52 Hz");
+    break;
+  case LSM6DS_RATE_104_HZ:
+    Serial.println("104 Hz");
+    break;
+  case LSM6DS_RATE_208_HZ:
+    Serial.println("208 Hz");
+    break;
+  case LSM6DS_RATE_416_HZ:
+    Serial.println("416 Hz");
+    break;
+  case LSM6DS_RATE_833_HZ:
+    Serial.println("833 Hz");
+    break;
+  case LSM6DS_RATE_1_66K_HZ:
+    Serial.println("1.66 KHz");
+    break;
+  case LSM6DS_RATE_3_33K_HZ:
+    Serial.println("3.33 KHz");
+    break;
+  case LSM6DS_RATE_6_66K_HZ:
+    Serial.println("6.66 KHz");
+    break;
+  }
+
+  imu.configInt1(false, false, true); // accelerometer DRDY on INT1
+  imu.configInt2(false, true, false); // gyro DRDY on INT2
+}
+void initLDRSensor(){
+  pinMode(ldrPin, INPUT);
+}
+// -------------------------- ENDOF SENSORS INIT FUNCTIONS --------------------------
+
+// -------------------------- ESP-NOW FUNCTIONS --------------------------
 void initESPNOW(){
   WiFi.mode(WIFI_MODE_STA);
   Serial.println(WiFi.macAddress());
@@ -154,65 +291,8 @@ void initESPNOW(){
   // Register for a callback function that will be called when data is received
   esp_now_register_recv_cb(OnDataRecv);
 }
-
-
-void initIMU(){
-  while (!Serial)
-    delay(10); // will pause Zero, Leonardo, etc until serial console opens
-
-  Serial.println("Adafruit LSM6DS33 test!");
-
-  if (!imu.begin_I2C()) {
-    // if (!lsm6ds33.begin_SPI(LSM_CS)) {
-    // if (!lsm6ds33.begin_SPI(LSM_CS, LSM_SCK, LSM_MISO, LSM_MOSI)) {
-    Serial.println("Failed to find LSM6DS33 chip");
-    while (1) {
-      delay(10);
-    }
-  }  
-  Serial.println("Adafruit LSM6DS33 FOUND!");
-}
-
-void initLDRSensor(){
-  //we will take a single reading from the light sensor and store it in the lightCal        
-  //variable. This will give us a prelinary value to compare against in the loop
-  pinMode(ldrPin, INPUT);
-  // lightInit=analogRead(ldrPin);
-}
-
-void serialPrint(){
-  Serial.print("X: ");
-  Serial.print(accX);
-  Serial.print("  Y: ");
-  Serial.print(accY);
-  Serial.print("  Z: ");
-  Serial.print(accZ);
-  Serial.print("  Roll: ");
-  Serial.print(msgToSlave.roll);
-  Serial.print("  Pitch: ");
-  Serial.print(msgToSlave.pitch);
-  Serial.print("  Luminosity: ");
-  Serial.print(msgToSlave.lightSensor);
-  Serial.println();
-
-}
-
-void serialPlotter(){
-  // Serial.print(accX);
-  // Serial.print(accY);
-  // Serial.print(accZ);
-  Serial.print(msgToSlave.roll);
-  Serial.print("\t");
-  Serial.println(msgToSlave.pitch);
-  
-  // Serial.print("  Light: ");
-  // Serial.print(msgToSlave.lightSensor);
-  // Serial.println();
-
-}
-
-// Callback Function that sents message
 void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status){
+  // Callback Function that sents message to the slave
   //Serial.print("\r\nLast Packet Send Status:\t");
   //Serial.println(status == ESP_NOW_SEND_SUCCESS ? "Delivery Success" : "Delivery Fail");
   if (status == 0){
@@ -222,37 +302,30 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status){
     success = "Delivery Fail :(";
   }
 }
-// Callback Function that triggered when a new packet arrives
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
+  // Callback Function that triggered when a new packet arrives from slave
   memcpy(&messageFromSlave,incomingData, sizeof(messageFromSlave));
   //Just for debug
   //Serial.print("Bytes received: ");
   //Serial.println(len);
-
   // Write the data that have been sent
   // receivedString = messageFromSlave.rec_message;
-  
 }
-void getAccReadings(){
+// -------------------------- ENDOF ESP-NOW FUNCTIONS --------------------------
+
+// -------------------------- SENSOR READINGS FUNCTIONS --------------------------
+void getIMUReadings(){
   imu.getEvent(&a, &g, &temp);
   // Get current acceleration values
   accX = a.acceleration.x;
   accY = a.acceleration.y;
   accZ = a.acceleration.z;
   // Get current gyroscope values
-  // gyroX= g.gyro.x;
-  // gyroY= g.gyro.y;
-  // gyroZ= g.gyro.z;
+  gyroX= g.gyro.x;
+  gyroY= g.gyro.y;
+  gyroZ= g.gyro.z;
 }
-
-
-void getLDRReadings(){
-  // Read the current light Levels
-  // lightInit=
-  msgToSlave.lightSensor=analogRead(ldrPin);
-}
-
-void doCalculations() {
+void getRollPitch() {
   /*
   Calculate Roll and pitch and save them into the structure message
   */
@@ -260,6 +333,13 @@ void doCalculations() {
   msgToSlave.pitch = atan2(-accX, sqrt(accY*accY + accZ*accZ)) * 180/M_PI;
 }
 
+void getLDRReadings(){
+  // Read the current light Levels
+  msgToSlave.lightSensor=analogRead(ldrPin);
+}
+// -------------------------- ENDOF SENSOR READINGS FUNCTIONS --------------------------
+
+// -------------------------- DECISION-MAKING FUNCTIONS --------------------------
 void blinking(int pin){
   /*
   Blinking the alarm 5 times (about 1 second procedure)
@@ -290,20 +370,62 @@ void checkAlarms(){
   }
   
 }
+// -------------------------- ENDOF DECISION-MAKING FUNCTIONS --------------------------
+
+
+// -------------------------- DEBUG FUNCTIONS --------------------------
+void serialPrint(){
+  Serial.print("gyroX: ");
+  Serial.print(gyroX);
+  Serial.print("  gyroY: ");
+  Serial.print(gyroY);
+  Serial.print("  gyroZ: ");
+  Serial.print(gyroZ);
+  Serial.print("accX: ");
+  Serial.print(accX);
+  Serial.print("  accY: ");
+  Serial.print(accY);
+  Serial.print("  accZ: ");
+  Serial.print(accZ);
+  Serial.print("  Roll: ");
+  Serial.print(msgToSlave.roll);
+  Serial.print("  Pitch: ");
+  Serial.print(msgToSlave.pitch);
+  Serial.print("  Luminosity: ");
+  Serial.print(msgToSlave.lightSensor);
+  Serial.println();
+
+}
+
+void serialPlotter(){
+  // Just for plotting
+  Serial.print(accX);
+  Serial.print(","); Serial.print(accY);
+  Serial.print(","); Serial.print(accZ);
+  Serial.print(",");
+
+  Serial.print(gyroX);
+  Serial.print(","); Serial.print(gyroY);
+  Serial.print(","); Serial.print(gyroZ);
+  Serial.println();
+  delayMicroseconds(10000);
+
+}
+// -------------------------- END OF DEBUG FUNCTIONS --------------------------
 
 
 void task1(void * parameters){
   for(;;){
-    Serial.print("Task 1: ");
+    // Serial.print("Task 1: ");
     //Get accelation readings
-    getAccReadings();
+    getIMUReadings();
     getLDRReadings();
-    doCalculations();
+    getRollPitch();
     if (!client.connected()) {
-      Serial.println("--------------------------------------------NONONONNO-------------------------");
       reconnect();
     }
-    if (millis() > last + 5000/portTICK_PERIOD_MS ){
+    if (millis() > last + 1000/portTICK_PERIOD_MS ){
+      // Publish the message to the mqtt server every 1 seconds
       String message = "";
       last = millis();
       // client.publish("esp32/accx", String(accX).c_str());
@@ -318,53 +440,46 @@ void task1(void * parameters){
       message += "accX="+String(accX)+";";
       message += "accY="+String(accY)+";";
       message += "accZ="+String(accZ)+";";
-
-
-      // Serial.println("Message to NODERED: ");
-      // Serial.println(message);
+      message += "gyroX="+String(gyroX)+";";
+      message += "gyroY="+String(gyroY)+";";
+      message += "gyroZ="+String(gyroZ)+";";
       client.publish("esp32/HELMET_INFO", message.c_str());
 
     }
     // Send message via ESP-NOW
     esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &msgToSlave, sizeof(msgToSlave));
     
-    if (result == ESP_OK) {
-      // Serial.println("Sent with success");
-    }
-    else {
-      // Serial.println("Error sending the data");
-    }
-    // Delay should be reduced ? 
-    serialPrint();
-    // serialPlotter();
-
+    // if (result == ESP_OK) {
+    //   Serial.println("Sent with success");
+    // }
+    // else {
+    //   Serial.println("Error sending the data");
+    // }
     vTaskDelay(500/portTICK_PERIOD_MS);
   }
 }
 
 void task2(void * parameters){
-
-  for(;;){
-    
+  // Second task check which alarm should be triggered 
+  // or open the headlights according to the luminosity (ldr sensor)
+  for(;;){  
     checkAlarms();
     vTaskDelay(500/portTICK_PERIOD_MS);
-    
-  }
-  
+  }  
 }
 
 void setup(){
   Serial.begin(115200);
+  // Initializations
+  initIMU();  
   connectToWifi();
-  initIMU();
   initLDRSensor();
   initESPNOW();
-
-  // Init alarms
   pinMode(leftPin,OUTPUT);
   pinMode(rightPin, OUTPUT);
   pinMode(lightPin,OUTPUT);
 
+  // Create the first task
   xTaskCreate(
     task1, // function name
     "Task1", // task name
@@ -374,6 +489,7 @@ void setup(){
     NULL // task handle
     );
   delay(500);
+  // create the second task
   xTaskCreate(
     task2, // function name
     "Task2", // task name
@@ -384,8 +500,4 @@ void setup(){
     );
 }
 
-
-
-void loop(){
-
-}
+void loop(){}
