@@ -16,7 +16,12 @@ float accX, accY, accZ, gyroX, gyroY, gyroZ,
 
 
 // LDR sensor pin
-unsigned long last = 0;
+unsigned long last = 0; // change that
+//For gestures
+unsigned long lastLeftTurn = 0; // change that
+unsigned long lastRightTurn = 0; // change that
+
+unsigned int gestureCnt=0;
 const int ldrPin=34;
 // Flashed pins
 const int rightPin=13;
@@ -34,7 +39,7 @@ typedef struct masterMessage {
   float pitch;
   int lightSensor;
 } masterMessage;
-
+//not used
 typedef struct receivedMessage{
   bool imuUsage;
   //String rec_message;
@@ -114,6 +119,7 @@ void reconnect(){
       // TODO-> the subscribes need to be changed !!!
       Serial.println("Connected");
       client.subscribe("esp32/HELMET_INFO");
+      client.subscribe("esp32/TURNS");
     }
     else{
       Serial.print(client.state());
@@ -353,21 +359,57 @@ void blinking(int pin){
   }
 }
 
+// Set a bool - flag when it finds any gesture to turn left or right
+bool leftTurnFlag=false;
+bool rightTurnFlag=false;
+
 void checkAlarms(){
+  String turnMsg=""; // Move this to the main string ? 
+  // Serial.print("Roll: ");
+  // Serial.print(msgToSlave.roll);
+  // Serial.print(" Pitch: ");
+  // Serial.println(msgToSlave.pitch);
+  // Should I need gestures for light or it is useless????
   if (msgToSlave.lightSensor< 800){
     digitalWrite(lightPin,HIGH);
   }else{
     digitalWrite(lightPin,LOW);
-  
   }
-  if (msgToSlave.roll<-30){
+  // gestureCnt must be 1 because it start from 0
+  if (msgToSlave.roll<-20 && leftTurnFlag ==true && gestureCnt>=1 && millis()<=lastLeftTurn + 2000/portTICK_PERIOD_MS){ 
+    Serial.println("[LEFT] 2nd gesture");
+    leftTurnFlag = false;
+    gestureCnt=0;
+    turnMsg+="turn=left";
     //Enable Ligh LEFT
-    blinking(leftPin);
+    client.publish("esp32/TURN", turnMsg.c_str());
+    blinking(leftPin);    
+  }else if (msgToSlave.roll<-20){
+    // Also set a timer in 5 seconds (you could do the second gesture into 5 seconds)
+    Serial.println("[LEFT] 1st gesture");
+    lastLeftTurn = millis();
+    gestureCnt+=1;
+    leftTurnFlag= true;
   }
-  else if (msgToSlave.roll>30){
-    // Enable light Right     
-    blinking(rightPin);
+
+  if (msgToSlave.roll>20 && rightTurnFlag ==true && gestureCnt>=1 && millis()<=lastRightTurn + 2000/portTICK_PERIOD_MS){ 
+    Serial.println("[RIGHT] 2nd gesture");
+    turnMsg+="turn=right"; 
+    rightTurnFlag = false;
+    gestureCnt=0;
+    client.publish("esp32/TURN", turnMsg.c_str());
+    blinking(rightPin);    
+    
+  }else if (msgToSlave.roll>20){
+    // Also set a timer in 5 seconds (you could do the second gesture into 5 seconds)
+    Serial.println("[RIGHT] 1st gesture");
+    lastRightTurn = millis();
+    gestureCnt+=1;
+    rightTurnFlag= true;
   }
+
+
+
   
 }
 // -------------------------- ENDOF DECISION-MAKING FUNCTIONS --------------------------
@@ -413,9 +455,9 @@ void serialPlotter(){
 }
 // -------------------------- END OF DEBUG FUNCTIONS --------------------------
 
-
 void task1(void * parameters){
   for(;;){
+    
     // Serial.print("Task 1: ");
     //Get accelation readings
     getIMUReadings();
@@ -428,12 +470,6 @@ void task1(void * parameters){
       // Publish the message to the mqtt server every 1 seconds
       String message = "";
       last = millis();
-      // client.publish("esp32/accx", String(accX).c_str());
-      // client.publish("esp32/accy", String(accY).c_str());
-      // client.publish("esp32/accz", String(accZ).c_str());
-      // client.publish("esp32/gyrox", String(gyroX).c_str());
-      // client.publish("esp32/gyroy", String(gyroY).c_str());
-      // client.publish("esp32/gyroz", String(gyroZ).c_str());
       message = "ldr="+String(analogRead(ldrPin))+";";
       message += "roll="+String(msgToSlave.roll)+";";
       message += "pitch="+String(msgToSlave.pitch)+";";
@@ -443,6 +479,7 @@ void task1(void * parameters){
       message += "gyroX="+String(gyroX)+";";
       message += "gyroY="+String(gyroY)+";";
       message += "gyroZ="+String(gyroZ)+";";
+      //Serial.println(message);
       client.publish("esp32/HELMET_INFO", message.c_str());
 
     }
@@ -463,7 +500,9 @@ void task2(void * parameters){
   // Second task check which alarm should be triggered 
   // or open the headlights according to the luminosity (ldr sensor)
   for(;;){  
+    //Check if catch a gesture 
     checkAlarms();
+
     vTaskDelay(500/portTICK_PERIOD_MS);
   }  
 }
@@ -483,7 +522,7 @@ void setup(){
   xTaskCreate(
     task1, // function name
     "Task1", // task name
-    2048, // stack size
+    4000, // stack size
     NULL, // task parameters 
     1, // task priority
     NULL // task handle
@@ -493,7 +532,7 @@ void setup(){
   xTaskCreate(
     task2, // function name
     "Task2", // task name
-    1400, // stack size
+    2000, // stack size
     NULL, // task parameters 
     1, // task priority
     NULL // task handle

@@ -49,7 +49,7 @@
         "overrides": []
       },
       "gridPos": {
-        "h": 7,
+        "h": 8,
         "w": 5,
         "x": 0,
         "y": 0
@@ -96,13 +96,114 @@
       "type": "gauge"
     },
     {
+      "aliasColors": {},
+      "breakPoint": "50%",
+      "cacheTimeout": null,
+      "combine": {
+        "label": "Others",
+        "threshold": 0
+      },
+      "datasource": null,
+      "fieldConfig": {
+        "defaults": {},
+        "overrides": []
+      },
+      "fontSize": "80%",
+      "format": "short",
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 5,
+        "y": 0
+      },
+      "id": 14,
+      "interval": null,
+      "legend": {
+        "show": true,
+        "values": true
+      },
+      "legendType": "Under graph",
+      "links": [],
+      "nullPointMode": "connected",
+      "pieType": "pie",
+      "pluginVersion": "7.5.6",
+      "strokeWidth": 1,
+      "targets": [
+        {
+          "alias": "Left",
+          "groupBy": [],
+          "hide": false,
+          "measurement": "turns",
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT count(turn) FROM turns WHERE (turn = 'left')  GROUP BY  \"left\"",
+          "rawQuery": true,
+          "refId": "A",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "turn"
+                ],
+                "type": "field"
+              },
+              {
+                "params": [],
+                "type": "count"
+              }
+            ]
+          ],
+          "tags": [
+            {
+              "key": "turn",
+              "operator": "=",
+              "value": "left"
+            }
+          ]
+        },
+        {
+          "alias": "Right",
+          "groupBy": [
+            {
+              "params": [
+                "$__interval"
+              ],
+              "type": "time"
+            }
+          ],
+          "hide": false,
+          "orderByTime": "ASC",
+          "policy": "default",
+          "query": "SELECT count(turn) FROM turns WHERE (turn = 'right')  GROUP BY  \"right\"",
+          "rawQuery": true,
+          "refId": "B",
+          "resultFormat": "time_series",
+          "select": [
+            [
+              {
+                "params": [
+                  "value"
+                ],
+                "type": "field"
+              }
+            ]
+          ],
+          "tags": []
+        }
+      ],
+      "title": "Turns ",
+      "type": "grafana-piechart-panel",
+      "valueName": "current"
+    },
+    {
       "collapsed": false,
       "datasource": null,
       "gridPos": {
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 7
+        "y": 8
       },
       "id": 10,
       "panels": [],
@@ -125,7 +226,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 8
+        "y": 9
       },
       "hiddenSeries": false,
       "id": 8,
@@ -329,7 +430,7 @@
         "h": 5,
         "w": 24,
         "x": 0,
-        "y": 14
+        "y": 15
       },
       "hiddenSeries": false,
       "id": 6,
@@ -501,7 +602,7 @@
         "h": 6,
         "w": 24,
         "x": 0,
-        "y": 19
+        "y": 20
       },
       "hiddenSeries": false,
       "id": 12,
@@ -679,5 +780,5 @@
   "timezone": "",
   "title": "IOT Project",
   "uid": "6BhJG4qMk",
-  "version": 6
+  "version": 8
 }
