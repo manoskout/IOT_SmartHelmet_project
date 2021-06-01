@@ -57,11 +57,11 @@ String success;
 esp_now_peer_info_t peerInfo;
 
 // WiFi credentials
-const char* ssid = "Koutoulakis";
-const char* password = "2810751032";
+const char* ssid = "Koutoulas";
+const char* password = "1312acab";
 
 // MQTT IP server
-const char* mqtt_server = "192.168.1.20";
+const char* mqtt_server = "192.168.43.29";
 int mqtt_port=1883;
 // message to communicate with mqtt server
 String message;
@@ -382,7 +382,7 @@ void checkAlarms(){
     gestureCnt=0;
     turnMsg+="turn=left";
     //Enable Ligh LEFT
-    client.publish("esp32/TURN", turnMsg.c_str());
+    client.publish("esp32/TURNS", turnMsg.c_str());
     blinking(leftPin);    
   }else if (msgToSlave.roll<-20){
     // Also set a timer in 5 seconds (you could do the second gesture into 5 seconds)
@@ -397,7 +397,7 @@ void checkAlarms(){
     turnMsg+="turn=right"; 
     rightTurnFlag = false;
     gestureCnt=0;
-    client.publish("esp32/TURN", turnMsg.c_str());
+    client.publish("esp32/TURNS", turnMsg.c_str());
     blinking(rightPin);    
     
   }else if (msgToSlave.roll>20){
