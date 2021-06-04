@@ -398,32 +398,12 @@ void checkRightTurn(String turnMsg){
     rightTurnFlag= true;
   }
 }
-void checkUp(){
-  if (msgToSlave.pitch>20){ 
-    Serial.println("[UP] gesture");
-    digitalWrite(lightPin,HIGH);     
-  }
 
-}
-void checkDown(){
-  if (msgToSlave.pitch<-20){ 
-    Serial.println("[DOWN] gesture");
-    digitalWrite(lightPin,LOW);     
-  }
-}
 // Set a flag to distinguish the status of the traffic lights
 void checkTrafficLights(){
-  bool lightStatus= digitalRead(lightPin);
   //Check the traffic light from LDR sensor
   if (msgToSlave.lightSensor< 800){
     digitalWrite(lightPin,HIGH);
-  }
-  // Else check traffic light through head's gestures
-  else if (msgToSlave.pitch>20){
-    digitalWrite(lightPin,HIGH);
-  }
-  else if (msgToSlave.pitch<-20){
-    digitalWrite(lightPin,LOW);
   }
   // Serial.println(lightStatus == true ? "Light On" : "Light off");
 }
@@ -454,8 +434,6 @@ void checkAlarms(){
   checkTrafficLights();
   checkLeftTurn(turnMsg);
   checkRightTurn(turnMsg);
-  checkUp();
-  checkDown();
   checkBrakes();
 }
 // -------------------------- ENDOF DECISION-MAKING FUNCTIONS --------------------------
