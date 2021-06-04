@@ -27,6 +27,7 @@ const int ldrPin=34;
 const int rightPin=13;
 const int leftPin=14;
 const int lightPin=12;
+const int brakePin=27;
 int lightInit; // initial value
 //Receiver MAC Address
 //C4:4F:33:6B:0F:E1
@@ -57,11 +58,11 @@ String success;
 esp_now_peer_info_t peerInfo;
 
 // WiFi credentials
-const char* ssid = "Koutoulas";
-const char* password = "1312acab";
+const char* ssid = "Koutoulakis";
+const char* password = "2810751032";
 
 // MQTT IP server
-const char* mqtt_server = "192.168.43.29";
+const char* mqtt_server = "192.168.1.20";
 int mqtt_port=1883;
 // message to communicate with mqtt server
 String message;
@@ -361,20 +362,7 @@ void blinking(int pin){
 
 // Set a bool - flag when it finds any gesture to turn left or right
 bool leftTurnFlag=false;
-bool rightTurnFlag=false;
-
-void checkAlarms(){
-  String turnMsg=""; // Move this to the main string ? 
-  // Serial.print("Roll: ");
-  // Serial.print(msgToSlave.roll);
-  // Serial.print(" Pitch: ");
-  // Serial.println(msgToSlave.pitch);
-  // Should I need gestures for light or it is useless????
-  if (msgToSlave.lightSensor< 800){
-    digitalWrite(lightPin,HIGH);
-  }else{
-    digitalWrite(lightPin,LOW);
-  }
+void checkLeftTurn(String turnMsg){
   // gestureCnt must be 1 because it start from 0
   if (msgToSlave.roll<-20 && leftTurnFlag ==true && gestureCnt>=1 && millis()<=lastLeftTurn + 2000/portTICK_PERIOD_MS){ 
     Serial.println("[LEFT] 2nd gesture");
@@ -391,7 +379,9 @@ void checkAlarms(){
     gestureCnt+=1;
     leftTurnFlag= true;
   }
-
+}
+bool rightTurnFlag=false;
+void checkRightTurn(String turnMsg){
   if (msgToSlave.roll>20 && rightTurnFlag ==true && gestureCnt>=1 && millis()<=lastRightTurn + 2000/portTICK_PERIOD_MS){ 
     Serial.println("[RIGHT] 2nd gesture");
     turnMsg+="turn=right"; 
@@ -407,10 +397,66 @@ void checkAlarms(){
     gestureCnt+=1;
     rightTurnFlag= true;
   }
+}
+void checkUp(){
+  if (msgToSlave.pitch>20){ 
+    Serial.println("[UP] gesture");
+    digitalWrite(lightPin,HIGH);     
+  }
 
-
-
-  
+}
+void checkDown(){
+  if (msgToSlave.pitch<-20){ 
+    Serial.println("[DOWN] gesture");
+    digitalWrite(lightPin,LOW);     
+  }
+}
+// Set a flag to distinguish the status of the traffic lights
+void checkTrafficLights(){
+  bool lightStatus= digitalRead(lightPin);
+  //Check the traffic light from LDR sensor
+  if (msgToSlave.lightSensor< 800){
+    digitalWrite(lightPin,HIGH);
+  }
+  // Else check traffic light through head's gestures
+  else if (msgToSlave.pitch>20){
+    digitalWrite(lightPin,HIGH);
+  }
+  else if (msgToSlave.pitch<-20){
+    digitalWrite(lightPin,LOW);
+  }
+  // Serial.println(lightStatus == true ? "Light On" : "Light off");
+}
+void checkBrakes(){
+  // TODO make it more scientific friendly !!!! by recognizing the velocity reduction
+  if (accX<3 || accY<3){
+    digitalWrite(brakePin,HIGH);
+  }else{
+    digitalWrite(brakePin,LOW);
+  }
+}
+void checkAlarms(){
+  String turnMsg=""; // Move this to the main string ? 
+  // Serial.print("Roll: ");
+  // Serial.print(msgToSlave.roll);
+  // Serial.print(" Pitch: ");
+  // Serial.println(msgToSlave.pitch);
+  // Should I need gestures for light or it is useless????
+  /*
+  // Commented Just to distinguish if the up and down gestures are work 
+  // TODO : Set somehow a flag in order to select manual or automatic Traffic Light handlers
+  if (msgToSlave.lightSensor< 800){
+    digitalWrite(lightPin,HIGH);
+  }else{
+    digitalWrite(lightPin,LOW);
+  }
+  */
+  checkTrafficLights();
+  checkLeftTurn(turnMsg);
+  checkRightTurn(turnMsg);
+  checkUp();
+  checkDown();
+  checkBrakes();
 }
 // -------------------------- ENDOF DECISION-MAKING FUNCTIONS --------------------------
 
@@ -517,7 +563,7 @@ void setup(){
   pinMode(leftPin,OUTPUT);
   pinMode(rightPin, OUTPUT);
   pinMode(lightPin,OUTPUT);
-
+  pinMode(brakePin,OUTPUT);
   // Create the first task
   xTaskCreate(
     task1, // function name
