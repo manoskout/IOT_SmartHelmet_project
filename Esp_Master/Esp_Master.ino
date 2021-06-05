@@ -42,16 +42,16 @@ typedef struct masterMessage {
 } masterMessage;
 //not used
 typedef struct receivedMessage{
-  bool imuUsage;
+  bool seatStatus;
   //String rec_message;
 }receivedMessage;
 
 // Define the masterMessage
 masterMessage msgToSlave;
 // TO_DO -> Change the struct because we will get different content (ie, pin to trigger the flashes)
-receivedMessage messageFromSlave;
+receivedMessage msgFromSlave;
 
-// String receivedString; 
+
 // Variable to store if sending data was successful
 String success;
 // Should be global ... ( TODO -> Check why ???)
@@ -98,18 +98,6 @@ void callback(char* topic, byte* payload, unsigned int length){
   Serial.print("/");
   Serial.print(String(message));
   Serial.println("] ");
-  
-  // if (String(topic) == "esp32/out"){
-  //   if (message == "on") {
-  //     digitalWrite(ledPin, HIGH);
-  //   }
-  //   else if (message == "off"){
-  //     digitalWrite(ledPin, LOW);
-  //   }
-  // }
-  // if (String(topic) == "esp32/ldr"){
-  //   ledcWrite(0, message.toInt());
-  // }
   message = "";
 }
 void reconnect(){
@@ -311,12 +299,10 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status){
 }
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
   // Callback Function that triggered when a new packet arrives from slave
-  memcpy(&messageFromSlave,incomingData, sizeof(messageFromSlave));
+  memcpy(&msgFromSlave,incomingData, sizeof(msgFromSlave));
   //Just for debug
   //Serial.print("Bytes received: ");
   //Serial.println(len);
-  // Write the data that have been sent
-  // receivedString = messageFromSlave.rec_message;
 }
 // -------------------------- ENDOF ESP-NOW FUNCTIONS --------------------------
 
@@ -399,14 +385,6 @@ void checkRightTurn(String turnMsg){
   }
 }
 
-// Set a flag to distinguish the status of the traffic lights
-void checkTrafficLights(){
-  //Check the traffic light from LDR sensor
-  if (msgToSlave.lightSensor< 800){
-    digitalWrite(lightPin,HIGH);
-  }
-  // Serial.println(lightStatus == true ? "Light On" : "Light off");
-}
 void checkBrakes(){
   // TODO make it more scientific friendly !!!! by recognizing the velocity reduction
   if (accX<3 || accY<3){
@@ -422,7 +400,7 @@ void checkAlarms(){
   // Serial.print(" Pitch: ");
   // Serial.println(msgToSlave.pitch);
   // Should I need gestures for light or it is useless????
-  /*
+  
   // Commented Just to distinguish if the up and down gestures are work 
   // TODO : Set somehow a flag in order to select manual or automatic Traffic Light handlers
   if (msgToSlave.lightSensor< 800){
@@ -430,8 +408,8 @@ void checkAlarms(){
   }else{
     digitalWrite(lightPin,LOW);
   }
-  */
-  checkTrafficLights();
+  
+  // checkTrafficLights();
   checkLeftTurn(turnMsg);
   checkRightTurn(turnMsg);
   checkBrakes();
@@ -503,6 +481,7 @@ void task1(void * parameters){
       message += "gyroX="+String(gyroX)+";";
       message += "gyroY="+String(gyroY)+";";
       message += "gyroZ="+String(gyroZ)+";";
+      message += "seatState="+String(msgFromSlave.seatStatus)+";";
       //Serial.println(message);
       client.publish("esp32/HELMET_INFO", message.c_str());
 
@@ -526,7 +505,7 @@ void task2(void * parameters){
   for(;;){  
     //Check if catch a gesture 
     checkAlarms();
-
+    Serial.println(msgFromSlave.seatStatus);
     vTaskDelay(500/portTICK_PERIOD_MS);
   }  
 }

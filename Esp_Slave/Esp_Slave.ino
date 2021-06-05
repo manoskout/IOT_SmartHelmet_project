@@ -1,6 +1,3 @@
-#include <SPI.h>
-#include <Adafruit_GFX.h>
-
 // For WIFI and TwoWayCom
 #include <esp_now.h>
 #include <WiFi.h>
@@ -8,6 +5,9 @@
 const int rightPin=27;
 const int leftPin=25;
 const int lightPin=26;
+
+// Pressure sensor
+const int pressurePin=32;
 
 //Receiver MAC Address
 // MASTER : 10:52:1C:67:C5:2C
@@ -21,11 +21,11 @@ typedef struct messageFromMaster {
   int lightSensor;
 } messageFromMaster;
 
-typedef struct struct_message {
-  bool imuUsage;
-} struct_message;
-// Define the struct_message
-struct_message slaveMessage; // more accurate name of this structure (the message that sends to the Master)
+typedef struct msgForMaster {
+  bool seatStatus;
+} msgForMaster;
+// Define the msgForMaster
+msgForMaster slaveMessage; // more accurate name of this structure (the message that sends to the Master)
 // TO_DO -> Change the struct because we will get different content (ie, pin to trigger the flashes)
 messageFromMaster masterMessage;
 // Variable to store if sending data was successful
@@ -123,18 +123,38 @@ void checkAlarms(){
 
 void alarmTask(void * parameters){
   for(;;){
-    Serial.print("Roll: ");
-    Serial.print(masterMessage.roll);
-    Serial.print("    Pitch: ");
-    Serial.print(masterMessage.pitch);
-    Serial.print("    Light: ");
-    Serial.print(masterMessage.lightSensor);
-    Serial.println("");
+    // Serial.print("Roll: ");
+    // Serial.print(masterMessage.roll);
+    // Serial.print("    Pitch: ");
+    // Serial.print(masterMessage.pitch);
+    // Serial.print("    Light: ");
+    // Serial.print(masterMessage.lightSensor);
+    // Serial.println("");
     checkAlarms();
     vTaskDelay(500/portTICK_PERIOD_MS);
   }
   
 }
+void seatTask(void * parameters){
+  /*
+  This task reads the values of the pressure sensor
+  The basic logic is to discetize the values to 0 or 1 
+  in order to know whether the driver is sit or not
+  */
+  for(;;){
+    if (touchRead(pressurePin) >=20){
+      slaveMessage.seatStatus=false;
+      Serial.println("Up");
+    }else{
+      Serial.println("Down");
+      slaveMessage.seatStatus=true;
+
+    }
+    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &slaveMessage, sizeof(slaveMessage));
+    vTaskDelay(500/portTICK_PERIOD_MS);
+  }
+}
+
 
 void setup()
 {
@@ -147,6 +167,14 @@ void setup()
   xTaskCreate(
     alarmTask, 
     "AlarmTask", 
+    1024, 
+    NULL, 
+    1, 
+    NULL
+  );
+  xTaskCreate(
+    seatTask, 
+    "seatTask", 
     1024, 
     NULL, 
     1, 
