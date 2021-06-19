@@ -5,10 +5,16 @@
 const int rightPin=27;
 const int leftPin=25;
 const int lightPin=26;
+const int brakePin=14;
+
+// TURN Flags
+bool rightTurnFlag = false;
+bool leftTurnFlag = false;
+int gestureCnt=0;
 
 // Pressure sensor
 const int pressurePin=32;
-
+float lastSpeedTime=0,lastSpeed=0, lastRightTurn=0, lastLeftTurn=0;
 //Receiver MAC Address
 // MASTER : 10:52:1C:67:C5:2C
 uint8_t broadcastAddress[] = {0x10, 0x52, 0x1C, 0x67, 0xC5, 0x2C};
@@ -16,12 +22,13 @@ uint8_t broadcastAddress[] = {0x10, 0x52, 0x1C, 0x67, 0xC5, 0x2C};
 // Define the struct that contains the message content
 // for our purposes we import the accelerometer readings 
 typedef struct messageFromMaster {
-  float roll;
-  float pitch;
+  String turn;
   int lightSensor;
+  float curSpeed;
 } messageFromMaster;
 
 typedef struct msgForMaster {
+  bool brake;
   bool seatStatus;
 } msgForMaster;
 // Define the msgForMaster
@@ -30,8 +37,8 @@ msgForMaster slaveMessage; // more accurate name of this structure (the message 
 messageFromMaster masterMessage;
 // Variable to store if sending data was successful
 String success;
-float receivedRoll,receivedPitch;
-int receivedLight;
+// String turn;
+// int receivedLight;
 
 
 // Callback Function that sents message
@@ -53,9 +60,9 @@ void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
   // Serial.println(len);
 
   // Write the data that have been sent
-  receivedRoll = masterMessage.roll;
-  receivedPitch = masterMessage.pitch;
-  receivedLight = masterMessage.lightSensor;
+  // turn = masterMessage.turn;
+  // receivedLight = masterMessage.lightSensor;
+  // Serial.println("Received Message-> Speed: " + String(masterMessage.curSpeed) + "Turn: " + String(masterMessage.turn)+" , Light Sensor: " + masterMessage.lightSensor);
 }
 
 void initESPNOW(){
@@ -103,16 +110,43 @@ void blinking(int pin){
     
   }
 }
-
+void checkLeft(){
+  if (masterMessage.turn=="right"){
+    if (rightTurnFlag == true && gestureCnt >= 1 && millis() <= lastRightTurn + 2000 / portTICK_PERIOD_MS) {
+      Serial.println("[RIGHT] 2nd gesture");
+      rightTurnFlag = false;
+      gestureCnt = 0;
+      blinking(rightPin);
+    } else {
+      // Also set a timer in 5 seconds (you could do the second gesture into 5 seconds)
+      Serial.println("[RIGHT] 1st gesture");
+      lastRightTurn = millis();
+      gestureCnt += 1;
+      rightTurnFlag = true;
+    }
+  }
+}
+void checkRight(){
+  if (masterMessage.turn=="left"){
+    if (leftTurnFlag == true && gestureCnt >= 1 && millis() <= lastLeftTurn + 2000 / portTICK_PERIOD_MS) {
+      Serial.println("[LEFT] 2nd gesture");
+      leftTurnFlag = false;
+      gestureCnt = 0;
+      blinking(leftPin);
+    } else {
+      // Also set a timer in 5 seconds (you could do the second gesture into 5 seconds)
+      Serial.println("[LEFT] 1st gesture");
+      lastLeftTurn = millis();
+      gestureCnt += 1;
+      leftTurnFlag = true;
+    }
+  }
+}
 void checkAlarms(){
-  if (masterMessage.roll<-30){
-    //Enable Ligh LEFT
-    blinking(leftPin);
-  }
-  else if (masterMessage.roll>30){
-    // Enable light Right     
-    blinking(rightPin);
-  }
+  checkLeft();
+  checkRight();
+  
+  
   if (masterMessage.lightSensor< 800){
     digitalWrite(lightPin,HIGH);
   }else{
@@ -120,16 +154,28 @@ void checkAlarms(){
   
   }
 }
+void checkBrakes(){
+  //by recognizing the velocity reduction 
+      // Serial.println("Last speed: "+String(lastSpeed)+ " CurSpeed: "+ String(masterMessage.curSpeed));
+
+  if (millis() > lastSpeedTime + (200/portTICK_PERIOD_MS) ){
+    lastSpeedTime=millis();
+      // Serial.println("Last speed: "+String(lastSpeed)+ " CurSpeed: "+ String(masterMessage.curSpeed));
+
+    if (masterMessage.curSpeed<(3*lastSpeed)/4){
+      Serial.println("Last speed: "+String(lastSpeed)+ " CurSpeed: "+ String(masterMessage.curSpeed));
+      slaveMessage.brake = true;
+      digitalWrite(brakePin,HIGH);
+    }else{
+    digitalWrite(brakePin,LOW);
+    slaveMessage.brake = false;
+   }
+  lastSpeed=masterMessage.curSpeed;
+  }
+}
 
 void alarmTask(void * parameters){
   for(;;){
-    // Serial.print("Roll: ");
-    // Serial.print(masterMessage.roll);
-    // Serial.print("    Pitch: ");
-    // Serial.print(masterMessage.pitch);
-    // Serial.print("    Light: ");
-    // Serial.print(masterMessage.lightSensor);
-    // Serial.println("");
     checkAlarms();
     vTaskDelay(500/portTICK_PERIOD_MS);
   }
@@ -142,22 +188,26 @@ void seatTask(void * parameters){
   in order to know whether the driver is sit or not
   */
   for(;;){
+    checkBrakes();
     if (touchRead(pressurePin) >=20){
       slaveMessage.seatStatus=false;
-      Serial.println("Up");
     }else{
-      Serial.println("Down");
       slaveMessage.seatStatus=true;
-
     }
-    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &slaveMessage, sizeof(slaveMessage));
-    vTaskDelay(500/portTICK_PERIOD_MS);
+    vTaskDelay(100/portTICK_PERIOD_MS);
   }
 }
 
+void masterCommunication(void* parameters){
+  for(;;){
+    esp_err_t result = esp_now_send(broadcastAddress, (uint8_t *) &slaveMessage, sizeof(slaveMessage));
+    vTaskDelay(100/portTICK_PERIOD_MS);
+  }
+}
 
 void setup()
 {
+  pinMode(brakePin, OUTPUT);
   Serial.begin(115200);
   initESPNOW();
   // Init alarms
@@ -180,11 +230,16 @@ void setup()
     1, 
     NULL
   );
+  xTaskCreate(
+    masterCommunication,
+    "masterCommunication",
+    2000,
+    NULL,
+    1,
+    NULL
+  );  
 }
 
 
 
-void loop()
-{
-
-}
+void loop(){}
