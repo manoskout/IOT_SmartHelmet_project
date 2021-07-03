@@ -155,15 +155,12 @@ void checkAlarms(){
   }
 }
 void checkBrakes(){
-  //by recognizing the velocity reduction 
-      // Serial.println("Last speed: "+String(lastSpeed)+ " CurSpeed: "+ String(masterMessage.curSpeed));
-
+  //by recognizing the velocity reduction   
   if (millis() > lastSpeedTime + (200/portTICK_PERIOD_MS) ){
     lastSpeedTime=millis();
-      // Serial.println("Last speed: "+String(lastSpeed)+ " CurSpeed: "+ String(masterMessage.curSpeed));
-
-    if (masterMessage.curSpeed<(3*lastSpeed)/4){
       Serial.println("Last speed: "+String(lastSpeed)+ " CurSpeed: "+ String(masterMessage.curSpeed));
+
+    if (masterMessage.curSpeed<(3*lastSpeed)/4 || masterMessage.curSpeed==0.0){
       slaveMessage.brake = true;
       digitalWrite(brakePin,HIGH);
     }else{

@@ -12,8 +12,8 @@
 //Constants Definition
 #define NUM_SAMPLES 30  // The sample that collect to identify the head's gestures
 #define NUM_AXES 3
-#define TRUNCATE 20  // To prevent the "spikes throughout the data collection"
-#define ACCEL_THRESHOLD 10
+// #define TRUNCATE 20  // To prevent the "spikes throughout the data collection"
+#define ACCEL_THRESHOLD 0
 #define INTERVAL 30
 
 //Model definition
@@ -23,7 +23,6 @@ Eloquent::ML::Port::RandomForest clf;
 Adafruit_LSM6DS33 imu;
 
 //  Create sensor object
-// sensors_event_t a,g,temp;
 //variables definition
 float baseline[NUM_AXES];
 float features[NUM_SAMPLES * NUM_AXES];
@@ -37,8 +36,11 @@ unsigned long lastSpeedTime = 0;  // change that
 //For gestures
 unsigned long lastLeftTurn = 0;   // change that
 unsigned long lastRightTurn = 0;  // change that
-
+// Set a bool - flag when it finds any gesture to turn left or right
+bool rightTurnFlag = false;
+bool leftTurnFlag = false;
 unsigned int gestureCnt = 0;
+// LDR Sensor pin
 const int ldrPin = 34;
 // Flashed pins
 const int rightPin = 13;
@@ -89,8 +91,8 @@ PubSubClient client(espClient);
 
 // -------------------------- DECISION-MAKING FUNCTIONS --------------------------
 void blinking(int pin) {
-  /*
-  Blinking the alarm 5 times (about 1 second procedure)
+  /**
+  Blinking the alarm 5 times (in a certain period of time)
   */
   for (int k = 0; k <= 5; k++) {
     digitalWrite(pin, HIGH);
@@ -101,36 +103,47 @@ void blinking(int pin) {
 }
 
 String classify() {
+  /**
+  Make tha classification of a gesture according to the trained model that used
+  @return String The name of the gesture 
+  */
   // Serial.print("Detected gesture: ");
   // Serial.println(clf.predictLabel(features));
   return clf.predictLabel(features);
 }
 
-// Set a bool - flag when it finds any gesture to turn left or right
-bool leftTurnFlag = false;
 void checkLeftTurn() {
+  /**
+  Check the gesture to the left have been triggered more than once (into a certain period of time)
+  The publish the turn into the MQTT broker and the alarm start blinking
+  */
+  String msg = "turn="+msgToSlave.turn;
   if (leftTurnFlag == true && gestureCnt >= 1 && millis() <= lastLeftTurn + 2000 / portTICK_PERIOD_MS) {
     Serial.println("[LEFT] 2nd gesture");
+    client.publish("esp32/TURNS", msg.c_str());
     leftTurnFlag = false;
     gestureCnt = 0;
     blinking(leftPin);
-    client.publish("esp32/TURNS", msgToSlave.turn.c_str());
   } else {
-    // Also set a timer in 5 seconds (you could do the second gesture into 5 seconds)
     Serial.println("[LEFT] 1st gesture");
     lastLeftTurn = millis();
     gestureCnt += 1;
     leftTurnFlag = true;
   }
 }
-bool rightTurnFlag = false;
+
 void checkRightTurn() {
+  /**
+  Check the gesture to the right have been triggered more than once (into a certain period of time)
+  The publish the turn into the MQTT broker and the alarm start blinking
+  */
+  String msg = "turn="+msgToSlave.turn;
   if (rightTurnFlag == true && gestureCnt >= 1 && millis() <= lastRightTurn + 2000 / portTICK_PERIOD_MS) {
     Serial.println("[RIGHT] 2nd gesture");
+    client.publish("esp32/TURNS", msg.c_str());
     rightTurnFlag = false;
     gestureCnt = 0;
     blinking(rightPin);
-    client.publish("esp32/TURNS", msgToSlave.turn.c_str());
   } else {
     // Also set a timer in 5 seconds (you could do the second gesture into 5 seconds)
     Serial.println("[RIGHT] 1st gesture");
@@ -142,14 +155,22 @@ void checkRightTurn() {
 
 
 bool motionDetected(float ax, float ay, float az) {
+  /**
+  Detects motion (not used)
+  */
   return (abs(ax) + abs(ay) + abs(az)) > ACCEL_THRESHOLD;
 }
 
 void checkBrakes(){
-
+  /**
+  If the return message from the Slave is true then it lights up the brakes
+  */
 }
 
 void checkAlarms() {
+  /**
+  The main function that investigates the decision of sensros
+  */
   checkBrakes();
   // turnMsg="";
   if (msgToSlave.lightSensor < 800) {
@@ -159,8 +180,9 @@ void checkAlarms() {
   }
 
   msgToSlave.turn = classify();  // Move this to the main string ?
+  // Serial.print(msgToSlave.turn);
   if (msgToSlave.turn == "left") {
-    
+  
     checkLeftTurn();
   } else if (msgToSlave.turn == "right") {
     checkRightTurn();
@@ -169,26 +191,30 @@ void checkAlarms() {
 // -------------------------- ENDOF DECISION-MAKING FUNCTIONS --------------------------
 
 void task1(void* parameters) {
+  /**
+   The main task that collects the sensors data and send them to the MQTT server
+  */
   for (;;) {
     // Serial.print("Heap Size (BEFORE) : " + String(xPortGetFreeHeapSize()));
     getIMUReadings();
-    if (ax > -3.97 && ax <3.97) {
+    if (ax > -0.5 && ax <0.5) {
       // This rule is to prevent the noise
       msgToSlave.curSpeed = 0;
     } else {
       msgToSlave.curSpeed = abs(ax * 3.6);
     }
-    Serial.println("Current Speed: " + String(msgToSlave.curSpeed));
+    // Serial.println("Current Speed: " + String(msgToSlave.curSpeed));
     //Get accelation readings
     getRollPitch();
     getLDRReadings();
     if (!client.connected()) {
       reconnect();
     }
-    if (millis() > last + 1000 / portTICK_PERIOD_MS) {
+    if (millis() > last + 500 / portTICK_PERIOD_MS) {
       // Publish the message to the mqtt server every 1 seconds
       String message = "";
       last = millis();
+      serialPrint();
       message = "ldr=" + String(msgToSlave.lightSensor) + ";";
       message += "speed=" + String(msgToSlave.curSpeed) + ";";
       message += "roll=" + String(roll) + ";";
@@ -203,14 +229,15 @@ void task1(void* parameters) {
       client.publish("esp32/HELMET_INFO", message.c_str());
       // Serial.print("accX (m/s2): ");Serial.print(accX);Serial.print(" accX (km/h): ");Serial.println(accX*3.6);
     }
-    // Send message via ESP-NOW
-    // esp_err_t result = esp_now_send(broadcastAddress, (uint8_t*)&msgToSlave, sizeof(msgToSlave));
-    // Serial.println("Heap Size (AFTER) : " + String(xPortGetFreeHeapSize()));
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }
 
 void task2(void* parameters) {
+  /**
+  The second task runs simultanuously with the Task1 and it is responsible for the seamless helmet interaction
+  according to the sensors' values 
+  */
   // Second task check which alarm should be triggered
   // or open the headlights according to the luminosity (ldr sensor)
   for (;;) {
@@ -221,10 +248,12 @@ void task2(void* parameters) {
 }
 
 void slaveCommunication(void* parameters) {
+  /**
+  Yet another task that runs seamlessly. Sends all the essential sensors' data to the slave
+  The communication with the slave is established through ESP-NOW protocol
+  */
   for (;;) {
     esp_err_t result = esp_now_send(broadcastAddress, (uint8_t*)&msgToSlave, sizeof(msgToSlave));
-    // Serial.println("Heap Size (AFTER) : " + String(xPortGetFreeHeapSize()));
-    // vTaskDelay(200 / portTICK_PERIOD_MS);
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }
 }

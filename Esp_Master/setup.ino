@@ -1,6 +1,9 @@
 
 // -------------------------- WIFI INIT FUNCTION --------------------------
 void connectToWifi(){
+  /**
+  Connects to the WiFi
+  */
   WiFi.begin(ssid,password);
   Serial.print("Connecting....");
   while (WiFi.status() != WL_CONNECTED){
@@ -18,6 +21,10 @@ void connectToWifi(){
 
 // -------------------------- MQTT INIT FUNCTIONS --------------------------
 void callback(char* topic, byte* payload, unsigned int length){
+  /**
+  The callback function is used to get a message from MQTT BROKER
+  By the time, this function is not used in this project.
+  */
   for (int i = 0; i < length; i++){
     message += (char)payload[i];
   }
@@ -29,6 +36,10 @@ void callback(char* topic, byte* payload, unsigned int length){
   message = "";
 }
 void reconnect(){
+  /**
+  In case of unexpected interruption of MQTT Broker, 
+  this function is executed until the connection established again
+  */
   // Loop until we're reconnected
   while (!client.connected()){
     Serial.println("Attempting MQTT connection...");
@@ -49,6 +60,9 @@ void reconnect(){
 
 // -------------------------- SENSORS INIT FUNCTIONS --------------------------
 void initIMU(){
+  /**
+  Initialize the IMU sensor
+  */
   while (!Serial)
     delay(10); // will pause Zero, Leonardo, etc until serial console opens
   Serial.println("Adafruit LSM6DS33 test!");
@@ -64,26 +78,36 @@ void initIMU(){
   imu.configInt2(false, true, false); // gyro DRDY on INT2
 }
 void calibrate() {
+  /**
+  Calibration function.
+  Read a series of sensor values 
+  */
   Serial.println("Callibrating........");
-  // float ax, ay, az,gx,gy,gz, curSpeed;
-  for (int i = 0; i < 10; i++) {
+  for (int i = 0; i < 50; i++) {
     getIMUReadings();
-    // TODO -> How to run function without worrying for the unused values
     delay(100);
   }
   baseline[0] = ax;
   baseline[1] = ay;
   baseline[2] = az;
+  Serial.print("Base0 : " +String(baseline[0]) + "Base1 : " + String(baseline[1]) + "Base2 : " + String(baseline[2]));
   Serial.println("Ready!");
 }
 
 void initLDRSensor(){
+  /**
+  Yet another simple function that only declares the LDR pin as an input sensor
+  */
   pinMode(ldrPin, INPUT);
 }
 // -------------------------- ENDOF SENSORS INIT FUNCTIONS --------------------------
 
 // -------------------------- ESP-NOW FUNCTIONS --------------------------
 void initESPNOW(){
+  /**
+  ESP-NOW protocol initialization function.
+  Connect the master node with the slave node using the MAC address of the microcontrollers
+  */
   WiFi.mode(WIFI_MODE_STA);
   Serial.println(WiFi.macAddress());
   // Init ESP-NOW
@@ -122,6 +146,10 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status){
   }
 }
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len){
+  /**
+  Callback function that works only when receives a message from the Slave node
+  */
+
   // Callback Function that triggered when a new packet arrives from slave
   memcpy(&msgFromSlave,incomingData, sizeof(msgFromSlave));
   //Just for debug
