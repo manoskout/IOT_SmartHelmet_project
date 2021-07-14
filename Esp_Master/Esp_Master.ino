@@ -13,7 +13,7 @@
 #define NUM_SAMPLES 30  // The sample that collect to identify the head's gestures
 #define NUM_AXES 3
 // #define TRUNCATE 20  // To prevent the "spikes throughout the data collection"
-#define ACCEL_THRESHOLD 0
+#define ACCEL_THRESHOLD 2 // Problem with Z axis (it gets value 30 with no reason)
 #define INTERVAL 30
 
 //Model definition
@@ -24,7 +24,7 @@ Adafruit_LSM6DS33 imu;
 
 //  Create sensor object
 //variables definition
-float baseline[NUM_AXES];
+float baseline[NUM_AXES]; // For calibration
 float features[NUM_SAMPLES * NUM_AXES];
 float ax, ay, az, gx, gy, gz;
 float lastSpeed = 0, roll, pitch;  // units degrees (roll and pitch noisy, yaw not possible)
@@ -62,7 +62,6 @@ typedef struct masterMessage {
 typedef struct receivedMessage {
   bool brake;
   bool seatStatus;
-  //String rec_message;
 } receivedMessage;
 
 // Define the masterMessage
@@ -82,7 +81,7 @@ const char* password = "2810751032";
 const char* mqtt_server = "192.168.1.20";
 int mqtt_port = 1883;
 // message to communicate with mqtt server
-String message;
+// String message;
 bool state = false;
 
 WiFiClient espClient;
@@ -155,24 +154,26 @@ void checkRightTurn() {
 
 
 bool motionDetected(float ax, float ay, float az) {
+
   /**
   Detects motion (not used)
   */
-  return (abs(ax) + abs(ay) + abs(az)) > ACCEL_THRESHOLD;
+  // return (abs(ax) + abs(ay) + abs(az)) > ACCEL_THRESHOLD;
+  return (abs(ax) + abs(ay)) > ACCEL_THRESHOLD;
+
 }
 
-void checkBrakes(){
-  /**
-  If the return message from the Slave is true then it lights up the brakes
-  */
-}
+// void checkBrakes(){
+//   /**
+//   If the return message from the Slave is true then it lights up the brakes
+//   */
+// }
 
 void checkAlarms() {
   /**
   The main function that investigates the decision of sensros
   */
-  checkBrakes();
-  // turnMsg="";
+  // checkBrakes();
   if (msgToSlave.lightSensor < 800) {
     digitalWrite(lightPin, HIGH);
   } else {
@@ -189,45 +190,64 @@ void checkAlarms() {
   }
 }
 // -------------------------- ENDOF DECISION-MAKING FUNCTIONS --------------------------
+float u0=0;
+float getSpeed(float u0,float a ){
+  float time=millis();
+  float u = u0 +a*time;
+  u0=u;
+  return u*3.6;
+}
 
+bool isNewTravel=true;
 void task1(void* parameters) {
   /**
    The main task that collects the sensors data and send them to the MQTT server
   */
+  String travelID;
   for (;;) {
-    // Serial.print("Heap Size (BEFORE) : " + String(xPortGetFreeHeapSize()));
     getIMUReadings();
-    if (ax > -0.5 && ax <0.5) {
-      // This rule is to prevent the noise
-      msgToSlave.curSpeed = 0;
-    } else {
-      msgToSlave.curSpeed = abs(ax * 3.6);
-    }
-    // Serial.println("Current Speed: " + String(msgToSlave.curSpeed));
+    msgToSlave.curSpeed = getSpeed(u0,ax);
     //Get accelation readings
     getRollPitch();
     getLDRReadings();
     if (!client.connected()) {
       reconnect();
     }
-    if (millis() > last + 500 / portTICK_PERIOD_MS) {
-      // Publish the message to the mqtt server every 1 seconds
-      String message = "";
-      last = millis();
-      serialPrint();
-      message = "ldr=" + String(msgToSlave.lightSensor) + ";";
-      message += "speed=" + String(msgToSlave.curSpeed) + ";";
-      message += "roll=" + String(roll) + ";";
-      message += "pitch=" + String(pitch) + ";";
-      message += "accX=" + String(ax) + ";";
-      message += "accY=" + String(ay) + ";";
-      message += "accZ=" + String(az) + ";";
-      message += "gyroX=" + String(gx) + ";";
-      message += "gyroY=" + String(gy) + ";";
-      message += "gyroZ=" + String(gz) + ";";
-      message += "seatState=" + String(msgFromSlave.seatStatus) + ";";
-      client.publish("esp32/HELMET_INFO", message.c_str());
-      // Serial.print("accX (m/s2): ");Serial.print(accX);Serial.print(" accX (km/h): ");Serial.println(accX*3.6);
+    
+    // If travel start then ... Check to be more specific
+    if (motionDetected(ax,ay,az) && (msgToSlave.curSpeed >1)){
+      // Serial.println ("Motion detected" +String(abs(ax) + abs(ay)));
+
+      if (millis() > last + 1000 / portTICK_PERIOD_MS) {
+        // Publish the message to the mqtt server every 1 seconds
+        String message = "";
+        last = millis();
+        // serialPrint();
+        // Serial.println(msgToSlave.curSpeed);
+        message = travelID;
+        message += "ldr=" + String(msgToSlave.lightSensor) + ";";
+        message += "speed=" + String(msgToSlave.curSpeed) + ";";
+        message += "roll=" + String(roll) + ";";
+        message += "pitch=" + String(pitch) + ";";
+        message += "accX=" + String(ax) + ";";
+        message += "accY=" + String(ay) + ";";
+        message += "accZ=" + String(az) + ";";
+        message += "gyroX=" + String(gx) + ";";
+        message += "gyroY=" + String(gy) + ";";
+        message += "gyroZ=" + String(gz) + ";";
+        message += "seatState=" + String(msgFromSlave.seatStatus) + ";";
+        // message += "timeOfSeatState=" + String(c)
+        client.publish("esp32/HELMET_INFO", message.c_str());
+        // Serial.print("accX (m/s2): ");Serial.print(ax);Serial.print(" accX (km/h): ");Serial.println(ax*3.6);
+        // Serial.println(travelID);
+        isNewTravel=true;
+      }
+    }else if ( (isNewTravel) && (millis() > last + 5000 / portTICK_PERIOD_MS) ){ 
+      // if data is not collected send something like a flag
+      travelID = "travelID=" + String(millis())+";";
+      // Serial.println(travelID);
+      // client.publish("esp32/TRAVEL_ID", travelID.c_str()); 
+      isNewTravel = false;
     }
     vTaskDelay(100 / portTICK_PERIOD_MS);
   }

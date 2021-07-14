@@ -15,26 +15,27 @@ void connectToWifi(){
   delay(500);
   
   client.setServer(mqtt_server, 1883);
-  client.setCallback(callback);
+  // client.setCallback(callback);
 }
 // -------------------------- ENDOF WIFI INIT FUNCTION --------------------------
 
 // -------------------------- MQTT INIT FUNCTIONS --------------------------
-void callback(char* topic, byte* payload, unsigned int length){
-  /**
-  The callback function is used to get a message from MQTT BROKER
-  By the time, this function is not used in this project.
-  */
-  for (int i = 0; i < length; i++){
-    message += (char)payload[i];
-  }
-  Serial.print("Message arrived [");
-  Serial.print(String(topic));
-  Serial.print("/");
-  Serial.print(String(message));
-  Serial.println("] ");
-  message = "";
-}
+
+// void callback(char* topic, byte* payload, unsigned int length){
+//   /**
+//   The callback function is used to get a message from MQTT BROKER
+//   By the time, this function is not used in this project.
+//   */
+//   for (int i = 0; i < length; i++){
+//     message += (char)payload[i];
+//   }
+//   Serial.print("Message arrived [");
+//   Serial.print(String(topic));
+//   Serial.print("/");
+//   Serial.print(String(message));
+//   Serial.println("] ");
+//   message = "";
+// }
 void reconnect(){
   /**
   In case of unexpected interruption of MQTT Broker, 

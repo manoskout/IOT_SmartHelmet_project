@@ -33,8 +33,10 @@ void getRollPitch() {
   Calculate Roll and pitch according to acceleromete values
   */
   //Roll & Pitch Equations
-	roll  = (atan2(-ay, az)*180.0)/M_PI;
-	pitch = (atan2(ax, sqrt(ay*ay + az*az))*180.0)/M_PI;
+
+  // see about that : https://engineering.stackexchange.com/questions/3348/calculating-pitch-yaw-and-roll-from-mag-acc-and-gyro-data
+  roll = 180 * atan (ay/sqrt(ax*ax + az*az))/M_PI;
+  pitch = 180 * atan (ax/sqrt(ay*ay + az*az))/M_PI;
 }
 
 void getLDRReadings(){

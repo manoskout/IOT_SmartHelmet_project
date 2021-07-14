@@ -27,12 +27,12 @@ typedef struct messageFromMaster {
   float curSpeed;
 } messageFromMaster;
 
-typedef struct msgForMaster {
+typedef struct msgToMaster {
   bool brake;
   bool seatStatus;
-} msgForMaster;
+} msgToMaster;
 // Define the msgForMaster
-msgForMaster slaveMessage; // more accurate name of this structure (the message that sends to the Master)
+msgToMaster slaveMessage; // more accurate name of this structure (the message that sends to the Master)
 // TO_DO -> Change the struct because we will get different content (ie, pin to trigger the flashes)
 messageFromMaster masterMessage;
 // Variable to store if sending data was successful
@@ -158,9 +158,9 @@ void checkBrakes(){
   //by recognizing the velocity reduction   
   if (millis() > lastSpeedTime + (200/portTICK_PERIOD_MS) ){
     lastSpeedTime=millis();
-      Serial.println("Last speed: "+String(lastSpeed)+ " CurSpeed: "+ String(masterMessage.curSpeed));
+      // Serial.println("Last speed: "+String(lastSpeed)+ " CurSpeed: "+ String(masterMessage.curSpeed));
 
-    if (masterMessage.curSpeed<(3*lastSpeed)/4 || masterMessage.curSpeed==0.0){
+    if (masterMessage.curSpeed<=(3*lastSpeed)/4 || masterMessage.curSpeed==0.0){
       slaveMessage.brake = true;
       digitalWrite(brakePin,HIGH);
     }else{
@@ -184,13 +184,20 @@ void seatTask(void * parameters){
   The basic logic is to discetize the values to 0 or 1 
   in order to know whether the driver is sit or not
   */
+
+
   for(;;){
     checkBrakes();
+    Serial.println(touchRead(pressurePin));
+  
+
+    bool previousStatus;
     if (touchRead(pressurePin) >=20){
+      // Orthopetalia
       slaveMessage.seatStatus=false;
     }else{
       slaveMessage.seatStatus=true;
-    }
+    }    
     vTaskDelay(100/portTICK_PERIOD_MS);
   }
 }
