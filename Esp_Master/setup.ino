@@ -84,13 +84,14 @@ void calibrate() {
   Read a series of sensor values 
   */
   Serial.println("Callibrating........");
-  for (int i = 0; i < 50; i++) {
-    getIMUReadings();
-    delay(100);
-  }
-  baseline[0] = ax;
-  baseline[1] = ay;
-  baseline[2] = az;
+  // for (int i = 0; i < 50; i++) {
+  //   getIMUReadings();
+  //   delay(100);
+  // }
+  // After callibration 
+  baseline[0] = 0.02;
+  baseline[1] = 0.11;
+  baseline[2] = 10.29;
   Serial.print("Base0 : " +String(baseline[0]) + "Base1 : " + String(baseline[1]) + "Base2 : " + String(baseline[2]));
   Serial.println("Ready!");
 }

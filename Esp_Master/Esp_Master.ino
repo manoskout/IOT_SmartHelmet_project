@@ -29,6 +29,7 @@ float features[NUM_SAMPLES * NUM_AXES];
 float ax, ay, az, gx, gy, gz;
 float lastSpeed = 0, roll, pitch;  // units degrees (roll and pitch noisy, yaw not possible)
 
+String travelID;
 
 // LDR sensor pin
 unsigned long last = 0;           // change that
@@ -116,7 +117,8 @@ void checkLeftTurn() {
   Check the gesture to the left have been triggered more than once (into a certain period of time)
   The publish the turn into the MQTT broker and the alarm start blinking
   */
-  String msg = "turn="+msgToSlave.turn;
+  String msg = travelID +"turn="+msgToSlave.turn;
+  Serial.println(msg);
   if (leftTurnFlag == true && gestureCnt >= 1 && millis() <= lastLeftTurn + 2000 / portTICK_PERIOD_MS) {
     Serial.println("[LEFT] 2nd gesture");
     client.publish("esp32/TURNS", msg.c_str());
@@ -190,20 +192,27 @@ void checkAlarms() {
   }
 }
 // -------------------------- ENDOF DECISION-MAKING FUNCTIONS --------------------------
+
+
+
 float u0=0;
 float getSpeed(float u0,float a ){
+  // check about Δt
   float time=millis();
   float u = u0 +a*time;
   u0=u;
-  return u*3.6;
+  return u;
 }
+
+
+
 
 bool isNewTravel=true;
 void task1(void* parameters) {
   /**
    The main task that collects the sensors data and send them to the MQTT server
   */
-  String travelID;
+  
   for (;;) {
     getIMUReadings();
     msgToSlave.curSpeed = getSpeed(u0,ax);
