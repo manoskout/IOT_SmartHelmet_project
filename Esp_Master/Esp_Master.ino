@@ -138,7 +138,7 @@ void checkRightTurn() {
   Check the gesture to the right have been triggered more than once (into a certain period of time)
   The publish the turn into the MQTT broker and the alarm start blinking
   */
-  String msg = "turn="+msgToSlave.turn;
+  String msg = travelID +"turn="+msgToSlave.turn;
   if (rightTurnFlag == true && gestureCnt >= 1 && millis() <= lastRightTurn + 2000 / portTICK_PERIOD_MS) {
     Serial.println("[RIGHT] 2nd gesture");
     client.publish("esp32/TURNS", msg.c_str());
